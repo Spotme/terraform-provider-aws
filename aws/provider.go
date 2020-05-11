@@ -679,6 +679,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_mq_configuration":                                    resourceAwsMqConfiguration(),
 			"aws_media_convert_queue":                                 resourceAwsMediaConvertQueue(),
 			"aws_media_live_input_security_group":                     resourceAwsMediaLiveInputSecurityGroup(),
+			"aws_media_live_input":                                    resourceAwsMediaLiveInput(),
 			"aws_media_package_channel":                               resourceAwsMediaPackageChannel(),
 			"aws_media_store_container":                               resourceAwsMediaStoreContainer(),
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
