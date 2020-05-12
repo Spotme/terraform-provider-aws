@@ -209,11 +209,6 @@ func resourceAwsMediaLiveInputUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	//TODO : Check if we need to wait here too
-	// if err := waitForMediaLiveInputOperation(conn, d.Id()); err != nil {
-	// 	return fmt.Errorf("Error waiting for operational MediaLive Input (%s): %s", d.Id(), err)
-	// }
-
 	return resourceAwsMediaLiveInputRead(d, meta)
 }
 
