@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/medialive"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
@@ -71,15 +72,15 @@ func resourceAwsMediaLiveInput() *schema.Resource {
 				Required: true,
 			},
 
-			"request_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
 			"input_security_groups": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"input_class": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 
 			"tags": tagsSchema(),
@@ -93,22 +94,18 @@ func resourceAwsMediaLiveInputCreate(d *schema.ResourceData, meta interface{}) e
 	input := &medialive.CreateInputInput{
 		Type:      aws.String(d.Get("input_type").(string)),
 		Name:      aws.String(d.Get("name").(string)),
-		RequestId: aws.String(d.Get("request_id").(string)),
+		RequestId: aws.String(uuid.Must(uuid.NewRandom()).String()),
 		RoleArn:   aws.String(d.Get("role_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
-		input.Destinations = expandDestinations(
+		input.Destinations = expandInputDestinations(
 			v.([]interface{}),
 		)
 	}
 
 	if raw, ok := d.GetOk("input_security_groups"); ok {
-		list := raw.([]interface{})
-		inputSecurityGroups := make([]*string, len(list))
-		for i, groupId := range list {
-			inputSecurityGroups[i] = aws.String(groupId.(string))
-		}
+		input.InputSecurityGroups = convertInputSecurityGroups(raw)
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -142,7 +139,15 @@ func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error describing MediaLive Input(%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("destinations", flattenInputDestinations(resp.Destinations)); err != nil {
+		return fmt.Errorf("error setting destinations: %s", err)
+	}
+
 	d.Set("arn", aws.StringValue(resp.Arn))
+	d.Set("type", aws.StringValue(resp.Type))
+	d.Set("name", aws.StringValue(resp.Name))
+	d.Set("input_class", aws.StringValue(resp.InputClass))
+	d.Set("role_arn", aws.StringValue(resp.RoleArn))
 
 	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -154,11 +159,38 @@ func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsMediaLiveInputUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).medialiveconn
 
-	if d.HasChange("input_type") {
-		input := &medialive.UpdateInputInput{
-			Name: aws.String(d.Get("name").(string)),
-		}
+	requestUpdate := false
+	input := &medialive.UpdateInputInput{
+		InputId: aws.String(d.Id()),
+	}
 
+	if d.HasChange("name") {
+		requestUpdate = true
+		input.Name = aws.String(d.Get("name").(string))
+	}
+
+	if d.HasChange("role_arn") {
+		requestUpdate = true
+		input.RoleArn = aws.String(d.Get("role_arn").(string))
+	}
+
+	if d.HasChange("stream_name") {
+		requestUpdate = true
+		if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
+			input.Destinations = expandInputDestinations(
+				v.([]interface{}),
+			)
+		}
+	}
+
+	if d.HasChange("input_security_groups") {
+		requestUpdate = true
+		if raw, ok := d.GetOk("input_security_groups"); ok {
+			input.InputSecurityGroups = convertInputSecurityGroups(raw)
+		}
+	}
+
+	if requestUpdate {
 		_, err := conn.UpdateInput(input)
 		if err != nil {
 			if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
@@ -252,7 +284,20 @@ func waitForMediaLiveInputDeletion(conn *medialive.MediaLive, inputId string) er
 	return err
 }
 
-func expandDestinations(destinations []interface{}) []*medialive.InputDestinationRequest {
+func flattenInputDestinations(inputDestinations []*medialive.InputDestination) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(inputDestinations))
+	for _, destination := range inputDestinations {
+		r := map[string]interface{}{
+			"url":  aws.StringValue(destination.Url),
+			"port": aws.StringValue(destination.Ip),
+			"ip":   aws.StringValue(destination.Port),
+		}
+		result = append(result, r)
+	}
+	return result
+}
+
+func expandInputDestinations(destinations []interface{}) []*medialive.InputDestinationRequest {
 	var result []*medialive.InputDestinationRequest
 	if len(destinations) == 0 {
 		return nil
@@ -266,4 +311,13 @@ func expandDestinations(destinations []interface{}) []*medialive.InputDestinatio
 		})
 	}
 	return result
+}
+
+func convertInputSecurityGroups(raw interface{}) []*string {
+	list := raw.([]interface{})
+	inputSecurityGroups := make([]*string, len(list))
+	for i, groupId := range list {
+		inputSecurityGroups[i] = aws.String(groupId.(string))
+	}
+	return inputSecurityGroups
 }
