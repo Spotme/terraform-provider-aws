@@ -14,8 +14,8 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsMediaLiveChannelCreate,
 		Read:   resourceAwsMediaLiveChannelRead,
-		Update: nil,
-		Delete: nil,
+		Update: resourceAwsMediaLiveChannelUpdate,
+		Delete: resourceAwsMediaLiveChannelDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -33,12 +33,116 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 						"input_attachment_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+						},
+
+						"automatic_input_failover_settings": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"input_preference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"secondary_input_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 
 						"input_id": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Required: true,
+						},
+
+						"input_settings": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"source_end_behavior": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"input_filter": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"filter_strength": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"deblock_filter": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"denoise_filter": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
+			"destinations": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"settings": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"password_param": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"stream_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"url": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"user_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+
+						"media_package_settings": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
+						"multiplex_settings": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -113,5 +217,13 @@ func resourceAwsMediaLiveChannelRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
+	return nil
+}
+
+func resourceAwsMediaLiveChannelUpdate(d *schema.ResourceData, meta interface{}) error {
+	return resourceAwsMediaLiveChannelRead(d, meta)
+}
+
+func resourceAwsMediaLiveChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }

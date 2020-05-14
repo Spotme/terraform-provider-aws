@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -68,8 +69,9 @@ func resourceAwsMediaLiveInput() *schema.Resource {
 			},
 
 			"role_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"input_security_groups": {
@@ -95,7 +97,6 @@ func resourceAwsMediaLiveInputCreate(d *schema.ResourceData, meta interface{}) e
 		Type:      aws.String(d.Get("input_type").(string)),
 		Name:      aws.String(d.Get("name").(string)),
 		RequestId: aws.String(uuid.Must(uuid.NewRandom()).String()),
-		RoleArn:   aws.String(d.Get("role_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
@@ -118,6 +119,30 @@ func resourceAwsMediaLiveInputCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(aws.StringValue(resp.Input.Id))
+
+	createStateConf := &resource.StateChangeConf{
+		Pending: []string{"CREATING"},
+		Target:  []string{"DETACHED", "ATTACHED"},
+		Refresh: func() (interface{}, string, error) {
+			input := &medialive.DescribeInputInput{
+				InputId: aws.String(d.Id()),
+			}
+			resp, err := conn.DescribeInput(input)
+			if err != nil {
+				return 0, "", err
+			}
+			return resp, aws.StringValue(resp.State), nil
+		},
+		Timeout:                   d.Timeout(schema.TimeoutCreate),
+		Delay:                     10 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+	}
+	_, err = createStateConf.WaitForState()
+
+	if err != nil {
+		return fmt.Errorf("Error waiting MediaLive Input (%s) to be created: %s", d.Id(), err)
+	}
 
 	return resourceAwsMediaLiveInputRead(d, meta)
 }
@@ -147,7 +172,6 @@ func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("type", aws.StringValue(resp.Type))
 	d.Set("name", aws.StringValue(resp.Name))
 	d.Set("input_class", aws.StringValue(resp.InputClass))
-	d.Set("role_arn", aws.StringValue(resp.RoleArn))
 
 	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -159,23 +183,15 @@ func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsMediaLiveInputUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).medialiveconn
 
-	requestUpdate := false
 	input := &medialive.UpdateInputInput{
 		InputId: aws.String(d.Id()),
 	}
 
 	if d.HasChange("name") {
-		requestUpdate = true
 		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	if d.HasChange("role_arn") {
-		requestUpdate = true
-		input.RoleArn = aws.String(d.Get("role_arn").(string))
-	}
-
 	if d.HasChange("stream_name") {
-		requestUpdate = true
 		if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
 			input.Destinations = expandInputDestinations(
 				v.([]interface{}),
@@ -184,22 +200,19 @@ func resourceAwsMediaLiveInputUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("input_security_groups") {
-		requestUpdate = true
 		if raw, ok := d.GetOk("input_security_groups"); ok {
 			input.InputSecurityGroups = convertInputSecurityGroups(raw)
 		}
 	}
 
-	if requestUpdate {
-		_, err := conn.UpdateInput(input)
-		if err != nil {
-			if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
-				log.Printf("[WARN] MediaLive Input %s not found, error code (404)", d.Id())
-				d.SetId("")
-				return nil
-			}
-			return fmt.Errorf("Error updating MediaLive Input(%s): %s", d.Id(), err)
+	_, err := conn.UpdateInput(input)
+	if err != nil {
+		if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] MediaLive Input %s not found, error code (404)", d.Id())
+			d.SetId("")
+			return nil
 		}
+		return fmt.Errorf("Error updating MediaLive Input(%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("tags") {
@@ -283,9 +296,10 @@ func flattenInputDestinations(inputDestinations []*medialive.InputDestination) [
 	result := make([]map[string]interface{}, 0, len(inputDestinations))
 	for _, destination := range inputDestinations {
 		r := map[string]interface{}{
-			"url":  aws.StringValue(destination.Url),
-			"port": aws.StringValue(destination.Ip),
-			"ip":   aws.StringValue(destination.Port),
+			"url":         aws.StringValue(destination.Url),
+			"port":        aws.StringValue(destination.Ip),
+			"ip":          aws.StringValue(destination.Port),
+			"stream_name": obtainStreamName(destination.Url),
 		}
 		result = append(result, r)
 	}
@@ -315,4 +329,13 @@ func convertInputSecurityGroups(raw interface{}) []*string {
 		inputSecurityGroups[i] = aws.String(groupId.(string))
 	}
 	return inputSecurityGroups
+}
+
+func obtainStreamName(streamUrl *string) string {
+	resp, err := url.Parse(*streamUrl)
+	if err != nil {
+		log.Printf("[WARN] Was not able to obtain StreamName for MediaLive Input (%s)", err)
+		return ""
+	}
+	return resp.Path[1:len(resp.Path)]
 }
