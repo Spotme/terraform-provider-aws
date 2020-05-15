@@ -25,6 +25,177 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				Computed: true,
 			},
 
+			// A standard channel has two encoding pipelines and a single pipeline channel only has one.
+			"channel_class": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "STANDARD",
+			},
+
+			"destinations": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"settings": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"password_param": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"stream_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"url": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"user_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+
+						"media_package_settings": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+
+						"multiplex_settings": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+
+			//EgressEndpoints
+			// TODO
+
+			// Encoder Settings
+			"encoder_settings": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"audio_descriptions": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"audio_selector_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"audio_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"audio_type_control": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"language_code": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"language_code_control": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"stream_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"codec_settings": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"aac_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"input_type": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+
+															"bitrate": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+
+															"coding_mode": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"raw_format": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"spec": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"profile": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"rate_control_mode": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"sample_rate": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"input_attachments": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -95,59 +266,30 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				},
 			},
 
-			"destinations": {
-				Type:     schema.TypeList,
+			"input_specification": {
+				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"codec": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"settings": {
-							Type:     schema.TypeList,
+						"maximum_bitrate": {
+							Type:     schema.TypeString,
 							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"password_param": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"stream_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"url": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"user_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
 						},
 
-						"media_package_settings": {
-							Type:     schema.TypeList,
+						"resolution": {
+							Type:     schema.TypeString,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-
-						"multiplex_settings": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
 
+			// The log level the user wants for their channel.
 			"log_level": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -156,6 +298,19 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+
+			///PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
+			// TODO
+
+			"pipelines_running_count": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"reserved": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"role_arn": {
