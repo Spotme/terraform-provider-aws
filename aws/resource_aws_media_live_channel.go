@@ -113,41 +113,63 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									// Advanced audio normalization settings.
+									"audio_normalization_settings": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												// Audio normalization algorithm to use. itu17701 conforms to the CALM Act specification,
+												// itu17702 conforms to the EBU R-128 specification.
+												"algorithm": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												// When set to correctAudio the output audio is corrected using the chosen algorithm.
+												// If set to measureOnly, the audio will be measured but not adjusted.
+												"algorithm_control": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												// Target LKFS(loudness) to adjust volume to. If no value is entered, a default
+												// value will be used according to the chosen algorithm. The CALM Act (1770-1)
+												// recommends a target of -24 LKFS. The EBU R-128 specification (1770-2) recommends
+												// a target of -23 LKFS.
+												"target_lkfs": {
+													Type:     schema.TypeFloat,
+													Optional: true,
+												},
+											},
+										},
+									},
+
+									// The name of the AudioSelector used as the source for this AudioDescription.
 									"audio_selector_name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
+									// Applies only if audioTypeControl is useConfigured. The values for audioType
+									// are defined in ISO-IEC 13818-1.
 									"audio_type": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
+									// Determines how audio type is determined. followInput: If the input contains
+									// an ISO 639 audioType, then that value is passed through to the output. If
+									// the input contains no ISO 639 audioType, the value in Audio Type is included
+									// in the output. useConfigured: The value in Audio Type is included in the
+									// output.Note that this field and audioType are both ignored if inputType is
+									// broadcasterMixedAd.
 									"audio_type_control": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
-									"language_code": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"language_code_control": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"stream_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
+									// Audio codec settings
 									"codec_settings": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -200,8 +222,41 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 														},
 													},
 												},
+
+												//TODO:
+												// Ac3 Settings
+												// Eac3 Settings
+												// Mp2 Settings
 											},
 										},
+									},
+
+									// Indicates the language of the audio output track. Only used if languageControlMode
+									// is useConfigured, or there is no ISO 639 language code specified in the input.
+									"language_code": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									// Choosing followInput will cause the ISO 639 language code of the output to
+									// follow the ISO 639 language code of the input. The languageCode will be used
+									// when useConfigured is set, or when followInput is selected but there is no
+									// ISO 639 language code specified by the input.
+									"language_code_control": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									//TODO: RemixSettings (settings that control how input audio channels are remixed into the output audio channels)
+
+									"stream_name": {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 								},
 							},
