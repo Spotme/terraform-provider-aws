@@ -261,6 +261,301 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 								},
 							},
 						},
+
+						"avail_blanking": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"avail_blanking_image": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"password_param": {
+													Type:     schedule.TypeString,
+													Optional: true,
+												},
+
+												"uri": {
+													Type:     schedule.TypeString,
+													Required: true,
+												},
+
+												"username": {
+													Type:     schedule.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
+									"state": {
+										Type:     schedule.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						// TODO: avail_configuration (event-wide configuration settings for ad avail insertion).
+
+						"blackout_slate": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"blackout_slate_image": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"password_param": {
+													Type:     schedule.TypeString,
+													Optional: true,
+												},
+
+												"uri": {
+													Type:     schedule.TypeString,
+													Required: true,
+												},
+
+												"username": {
+													Type:     schedule.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
+									"network_end_blackout": {
+										Type:     schedule.TypeString,
+										Optional: true,
+									},
+
+									"network_end_blackout_image": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"password_param": {
+													Type:     schedule.TypeString,
+													Optional: true,
+												},
+
+												"uri": {
+													Type:     schedule.TypeString,
+													Required: true,
+												},
+
+												"username": {
+													Type:     schedule.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
+									"network_id": {
+										Type:     schedule.TypeString,
+										Optional: true,
+									},
+
+									"state": {
+										Type:     schedule.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						// TODO: CaptionDescriptions
+
+						"global_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"initial_audio_gain": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+
+									"input_end_action": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"input_loss_behavior": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"black_frame_msec": {
+													Type:     schedule.TypeInt,
+													Optional: true,
+												},
+
+												"input_loss_image_color": {
+													Type:     schedule.TypeString,
+													Optional: true,
+												},
+
+												"input_loss_image_slate": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"password_param": {
+																Type:     schedule.TypeString,
+																Optional: true,
+															},
+
+															"uri": {
+																Type:     schedule.TypeString,
+																Required: true,
+															},
+
+															"username": {
+																Type:     schedule.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+
+												"input_loss_image_type": {
+													Type:     schedule.TypeString,
+													Optional: true,
+												},
+
+												"repeat_frame_msec": {
+													Type:     schedule.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+
+									"output_locking_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"output_timing_source": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"support_low_framerate_inputs": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						//TODO: Nielsen configuration settings.
+
+						"output_groups": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"output_group_settings": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"hls_group_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"base_url_content": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"caption_language_setting": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Default:  "OMIT",
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
+						"timecode_config": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"source": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									// Threshold in frames beyond which output timecode is resynchronized to the
+									// input timecode. Discrepancies below this threshold are permitted to avoid
+									// unnecessary discontinuities in the output timecode. No timecode sync when
+									// this is not specified.
+									"sync_threshold": {
+										Type:     schedule.TypeInt,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						"video_descriptions": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"height": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"respond_to_afd": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"scaling_behavior": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"sharpness": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+
+									"width": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
