@@ -32,6 +32,8 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				Default:  "STANDARD",
 			},
 
+			// A list of destinations of the channel. For UDP outputs, there is onedestination
+			// per output. For other types (HLS, for example), there isone destination per packager.
 			"destinations": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -85,8 +87,20 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				},
 			},
 
-			//EgressEndpoints
-			// TODO
+			// The endpoints where outgoing connections initiate from
+			"egress_endpoints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Public IP of where a channel's output comes from
+						"source_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 
 			// Encoder Settings
 			"encoder_settings": {
@@ -300,8 +314,32 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				Required: true,
 			},
 
-			///PipelineDetails []*PipelineDetail `locationName:"pipelineDetails" type:"list"`
-			// TODO
+			"pipeline_details": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// The name of the active input attachment currently being ingested by this pipeline.
+						"active_input_attachment_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						// The name of the input switch schedule action that occurred most recently
+						// and that resulted in the switch to the current input attachment for this
+						// pipeline.
+						"active_input_switch_action_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"pipeline_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 
 			"pipelines_running_count": {
 				Type:     schema.TypeString,
