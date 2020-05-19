@@ -455,8 +455,6 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 							},
 						},
 
-						//TODO: Nielsen configuration settings.
-
 						"output_groups": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -489,6 +487,106 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 															},
 														},
 													},
+												},
+											},
+										},
+									},
+
+									"outputs": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"audio_description_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+
+												"caption_description_names": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+
+												"output_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"output_settings": {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"hls_output_settings": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"h_265_packaging_type": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"hls_settings": {
+																			Type:     schema.TypeSet,
+																			Required: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"standard_hls_settings": {
+																						Type:     schema.TypeSet,
+																						Required: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"m3u8_settings": {
+																									Type:     schema.TypeSet,
+																									Required: true,
+																									Elem: &schema.Resource{
+																										Schema: map[string]*schema.Schema{
+																											"audio_frames_per_pes": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																											},
+
+																											"audio_pids": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"nielsen_id3_behavior": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+																										},
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+
+																		"name_modifier": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"segment_modifier": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"video_description_name": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 											},
 										},
@@ -691,6 +789,66 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 															},
 
 															"profile": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"quality_level": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"qvbr_quality_level": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"rate_control_mode": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"scan_type": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"scene_change_detect": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"slices": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"softness": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"spatial_aq": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"subgop_length": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"syntax": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"temporal_aq": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"timecode_insertion": {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
