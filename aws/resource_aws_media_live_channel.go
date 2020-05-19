@@ -273,17 +273,17 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password_param": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 
 												"uri": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Required: true,
 												},
 
 												"username": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Required: true,
 												},
 											},
@@ -291,7 +291,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									},
 
 									"state": {
-										Type:     schedule.TypeString,
+										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
@@ -311,17 +311,17 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password_param": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 
 												"uri": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Required: true,
 												},
 
 												"username": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Required: true,
 												},
 											},
@@ -329,7 +329,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									},
 
 									"network_end_blackout": {
-										Type:     schedule.TypeString,
+										Type:     schema.TypeString,
 										Optional: true,
 									},
 
@@ -339,17 +339,17 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"password_param": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 
 												"uri": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Required: true,
 												},
 
 												"username": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Required: true,
 												},
 											},
@@ -357,12 +357,12 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									},
 
 									"network_id": {
-										Type:     schedule.TypeString,
+										Type:     schema.TypeString,
 										Optional: true,
 									},
 
 									"state": {
-										Type:     schedule.TypeString,
+										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
@@ -392,12 +392,12 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"black_frame_msec": {
-													Type:     schedule.TypeInt,
+													Type:     schema.TypeInt,
 													Optional: true,
 												},
 
 												"input_loss_image_color": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 
@@ -407,17 +407,17 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"password_param": {
-																Type:     schedule.TypeString,
+																Type:     schema.TypeString,
 																Optional: true,
 															},
 
 															"uri": {
-																Type:     schedule.TypeString,
+																Type:     schema.TypeString,
 																Required: true,
 															},
 
 															"username": {
-																Type:     schedule.TypeString,
+																Type:     schema.TypeString,
 																Required: true,
 															},
 														},
@@ -425,12 +425,12 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 												},
 
 												"input_loss_image_type": {
-													Type:     schedule.TypeString,
+													Type:     schema.TypeString,
 													Optional: true,
 												},
 
 												"repeat_frame_msec": {
-													Type:     schedule.TypeInt,
+													Type:     schema.TypeInt,
 													Optional: true,
 												},
 											},
@@ -512,7 +512,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									// unnecessary discontinuities in the output timecode. No timecode sync when
 									// this is not specified.
 									"sync_threshold": {
-										Type:     schedule.TypeInt,
+										Type:     schema.TypeInt,
 										Optional: true,
 									},
 								},
@@ -527,6 +527,178 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									"height": {
 										Type:     schema.TypeInt,
 										Required: true,
+									},
+
+									// Video codec settings.
+									"codec_settings": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												// The frequency at which to capture frames for inclusion in the output. May
+												// be specified in either seconds or milliseconds, as specified by captureIntervalUnits.
+												"frame_capture_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"capture_interval": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+
+															"capture_interval_units": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+
+												"h264_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"adaptive_quantization": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"afd_signaling": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"bitrate": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"buf_fill_pct": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"buf_size": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"color_metadata": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"entropy_encoding": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"fixed_afd": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"flicker_aq": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"force_field_pictures": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"frame_rate_control": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"framerate_denominator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"framerate_numerator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"gop_b_reference": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"gop_closed_cadence": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"gop_num_b_frames": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"gop_size": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+															},
+
+															"gop_size_units": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"level": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"look_ahead_rate_control": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"max_bitrate": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"min_i_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"num_ref_frames": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"par_control": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"par_denominator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"par_numerator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"profile": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 
 									"name": {
