@@ -3,9 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/medialive"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -155,7 +157,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									// are defined in ISO-IEC 13818-1.
 									"audio_type": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 
 									// Determines how audio type is determined. followInput: If the input contains
@@ -172,7 +174,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									// Audio codec settings
 									"codec_settings": {
 										Type:     schema.TypeSet,
-										Optional: true,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"aac_settings": {
@@ -235,7 +237,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									// is useConfigured, or there is no ISO 639 language code specified in the input.
 									"language_code": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 
 									// Choosing followInput will cause the ISO 639 language code of the output to
@@ -871,12 +873,14 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 									"respond_to_afd": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "NONE",
 									},
 
 									"scaling_behavior": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "DEFAULT",
 									},
 
 									"sharpness": {
@@ -1085,6 +1089,30 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(aws.StringValue(resp.Channel.Id))
+
+	createStateConf := &resource.StateChangeConf{
+		Pending: []string{"CREATING", "UPDATING"},
+		Target:  []string{"IDLE"},
+		Refresh: func() (interface{}, string, error) {
+			input := &medialive.DescribeChannelInput{
+				ChannelId: aws.String(d.Id()),
+			}
+			resp, err := conn.DescribeChannel(input)
+			if err != nil {
+				return 0, "", err
+			}
+			return resp, aws.StringValue(resp.State), nil
+		},
+		Timeout:                   d.Timeout(schema.TimeoutCreate),
+		Delay:                     10 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+	}
+	_, err = createStateConf.WaitForState()
+
+	if err != nil {
+		return fmt.Errorf("Error waiting MediaLive Channel (%s) to be created: %s", d.Id(), err)
+	}
 
 	return resourceAwsMediaLiveChannelRead(d, meta)
 }
