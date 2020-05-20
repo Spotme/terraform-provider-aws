@@ -56,15 +56,15 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 									"stream_name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 
 									"url": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 
-									"user_name": {
+									"username": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -74,13 +74,13 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 						"media_package_settings": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 
 						"multiplex_settings": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -936,27 +936,32 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"source_end_behavior": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "CONTINUE",
 									},
 
 									"input_filter": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "AUTO",
 									},
 
 									"filter_strength": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  1,
 									},
 
 									"deblock_filter": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "DISABLED",
 									},
 
 									"denoise_filter": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+										Default:  "DISABLED",
 									},
 								},
 							},
@@ -1054,6 +1059,20 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 		ChannelClass: aws.String(d.Get("channel_class").(string)),
 		Name:         aws.String(d.Get("name").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
+		LogLevel:     aws.String(d.Get("log_level").(string)),
+	}
+
+	inputSpec := d.Get("input_specification").(map[string]interface{})
+	input.InputSpecification = &medialive.InputSpecification{
+		Codec:          aws.String(inputSpec["codec"].(string)),
+		MaximumBitrate: aws.String(inputSpec["maximum_bitrate"].(string)),
+		Resolution:     aws.String(inputSpec["resolution"].(string)),
+	}
+
+	if v, ok := d.GetOk("input_attachments"); ok && len(v.([]interface{})) > 0 {
+		input.InputAttachments = expandInputAttachments(
+			v.([]interface{}),
+		)
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -1104,4 +1123,23 @@ func resourceAwsMediaLiveChannelUpdate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsMediaLiveChannelDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
+}
+
+func expandInputAttachments(inputAttachments []interface{}) []*medialive.InputAttachment {
+	var result []*medialive.InputAttachment
+	if len(inputAttachments) == 0 {
+		return nil
+	}
+
+	for _, inputAtt := range inputAttachments {
+		r := inputAtt.(map[string]interface{})
+
+		result = append(result, &medialive.InputAttachment{
+			InputAttachmentName: aws.String(r["input_attachment_name"].(string)),
+			InputId:             aws.String(r["input_id"].(string)),
+			//InputSettings:
+			//AutomaticInputFailoverSettings:
+		})
+	}
+	return result
 }
