@@ -379,11 +379,13 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									"initial_audio_gain": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Default:  0,
 									},
 
 									"input_end_action": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Default:  "NONE",
 									},
 
 									"input_loss_behavior": {
@@ -440,16 +442,19 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									"output_locking_mode": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Default:  "PIPELINE_LOCKING",
 									},
 
 									"output_timing_source": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Default:  "INPUT_CLOCK",
 									},
 
 									"support_low_framerate_inputs": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Default:  "DISABLED",
 									},
 								},
 							},
@@ -987,6 +992,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 			"log_level": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "DISABLED",
 			},
 
 			"name": {
@@ -1028,7 +1034,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 			"reserved": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 
 			"role_arn": {
@@ -1045,9 +1051,8 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).medialiveconn
 
 	input := &medialive.CreateChannelInput{
-		ChannelClass: aws.String(d.Get("input_type").(string)),
+		ChannelClass: aws.String(d.Get("channel_class").(string)),
 		Name:         aws.String(d.Get("name").(string)),
-		Reserved:     aws.String(d.Get("reserved").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
 	}
 
