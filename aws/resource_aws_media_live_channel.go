@@ -945,24 +945,24 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 						"input_settings": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"source_end_behavior": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 										Default:  "CONTINUE",
 									},
 
 									"input_filter": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 										Default:  "AUTO",
 									},
 
 									"filter_strength": {
 										Type:     schema.TypeInt,
-										Optional: true,
+										Required: true,
 										Default:  1,
 									},
 
@@ -1092,6 +1092,12 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 		)
 	}
 
+	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
+		input.EncoderSettings = expandEncoderSettings(
+			v.([]interface{}),
+		)
+	}
+
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		input.Tags = keyvaluetags.New(v).IgnoreAws().MedialiveTags()
 	}
@@ -1178,8 +1184,7 @@ func expandInputAttachments(inputAttachments []interface{}) []*medialive.InputAt
 		result = append(result, &medialive.InputAttachment{
 			InputAttachmentName: aws.String(r["input_attachment_name"].(string)),
 			InputId:             aws.String(r["input_id"].(string)),
-			//InputSettings:
-			//AutomaticInputFailoverSettings:
+			InputSettings:       expandInputAttachmentSettings(r["input_settings"]),
 		})
 	}
 	return result
@@ -1220,7 +1225,7 @@ func expandDestinations(destinations []interface{}) []*medialive.OutputDestinati
 func expandOutputDestinationSettings(destinationSettings []interface{}) []*medialive.OutputDestinationSettings {
 	var result []*medialive.OutputDestinationSettings
 	if len(destinationSettings) == 0 {
-		log.Printf("[WARN] MediaLive Channel: One destination setting is required for each redundant encoder")
+		log.Printf("[ERROR] MediaLive Channel: One destination setting is required for each redundant encoder")
 		return nil
 	}
 
@@ -1235,4 +1240,53 @@ func expandOutputDestinationSettings(destinationSettings []interface{}) []*media
 		})
 	}
 	return result
+}
+
+func expandEncoderSettings(s *schema.Set) *medialive.EncoderSettings {
+	if s.Len() > 0 {
+		rawEncoderSettings := s.List()[0].(map[string]interface{})
+		return &medialive.EncoderSettings{
+			AudioDescriptions: expandAudioDescriptions(rawEncoderSettings["audio_descriptions"].(string)),
+			OutputGroup:       expandOutputGroups(rawEncoderSettings["output_groups"]),
+			TimecodeConfig:    expandTimecodeConfigs(rawEncoderSettings["timecode_config"].(string)),
+			VideoDescriptions: expandVideoDescriptions(rawEncoderSettings["video_descriptions"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: Encoder settings required")
+		return &medialive.InputSpecification{}
+	}
+}
+
+func expandAudioDescriptions(audioDescriptions []interface{}) []*medialive.AudioDescription {
+	var result []*medialive.AudioDescription
+	if len(audioDescriptions) == 0 {
+		log.Printf("[ERROR] MediaLive Channel: At least one audio description is required for each encoder")
+		return nil
+	}
+
+	for _, descs := range audioDescriptions {
+		r := descs.(map[string]interface{})
+
+		result = append(result, &medialive.OutputDestinationSettings{
+			AudioSelectorName: aws.String(r["audio_selector_name"].(string)),
+			Name:              aws.String(r["name"].(string)),
+			StreamName:        aws.String(r["stream_name"].(string)),
+			CodecSettings:     expandAudioCodecSettings(r["codec_settings"]),
+		})
+	}
+	return result
+}
+
+func expandAudioCodecSetting(s *schema.Set) *medialive.CodecSettings {
+	if s.Len() > 0 {
+		rawCodecSettings := s.List()[0].(map[string]interface{})
+		return &medialive.InputSpecification{
+			AacSettings:    expandAacCodecSettings(rawInputSpecification["aac_settings"].((*schema.Set))),
+			MaximumBitrate: aws.String(rawInputSpecification["maximum_bitrate"].(string)),
+			Resolution:     aws.String(rawInputSpecification["resolution"].(string)),
+		}
+	} else {
+		log.Printf("[WARN] MediaLive Channel: Input Specification can not be found")
+		return &medialive.InputSpecification{}
+	}
 }
