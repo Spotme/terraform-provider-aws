@@ -198,7 +198,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 															},
 
 															"bitrate": {
-																Type:     schema.TypeString,
+																Type:     schema.TypeFloat,
 																Required: true,
 															},
 
@@ -228,6 +228,11 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 															},
 
 															"sample_rate": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"vbr_quality": {
 																Type:     schema.TypeString,
 																Optional: true,
 															},

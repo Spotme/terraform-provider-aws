@@ -1,4 +1,3 @@
-
 // MediaLive Channel structure helpers.
 //
 // These functions assist in pulling in data from Terraform resource
@@ -134,7 +133,23 @@ func expandAudioCodecSettings(s *schema.Set) *medialive.AudioCodecSettings {
 }
 
 func expandAacCodecSettings(s *schema.Set) *medialive.AacSettings {
-	return &medialive.AacSettings{}
+	if s.Len() > 0 {
+		rawAacSettings := s.List()[0].(map[string]interface{})
+		return &medialive.AacSettings{
+			Bitrate:         aws.Float64(rawAacSettings["bitrate"].(float64)),
+			CodingMode:      aws.String(rawAacSettings["coding_mode"].(string)),
+			InputType:       aws.String(rawAacSettings["input_type"].(string)),
+			Profile:         aws.String(rawAacSettings["profile"].(string)),
+			RateControlMode: aws.String(rawAacSettings["rate_control_mode"].(string)),
+			RawFormat:       aws.String(rawAacSettings["raw_format"].(string)),
+			SampleRate:      aws.Float64(rawAacSettings["sample_rate"].(float64)),
+			Spec:            aws.String(rawAacSettings["spec"].(string)),
+			VbrQuality:      aws.String(rawAacSettings["vbr_quality"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: AAC Specification can not be found")
+		return &medialive.AacSettings{}
+	}
 }
 
 func expandOutputGroups(outputGroups []interface{}) []*medialive.OutputGroup {
@@ -158,11 +173,32 @@ func expandHlsSettings(hlsSettings []interface{}) []*medialive.HlsSettings {
 }
 
 func expandInputAttachmentSettings(s *schema.Set) *medialive.InputSettings {
-	return &medialive.InputSettings{}
+	if s.Len() > 0 {
+		rawInputSettings := s.List()[0].(map[string]interface{})
+		return &medialive.InputSettings{
+			DeblockFilter:     aws.String(rawInputSettings["deblock_filter"].(string)),
+			DenoiseFilter:     aws.String(rawInputSettings["denoise_filter"].(string)),
+			FilterStrength:    aws.Int64(rawInputSettings["filter_strength"].(int64)),
+			InputFilter:       aws.String(rawInputSettings["input_filter"].(string)),
+			SourceEndBehavior: aws.String(rawInputSettings["source_end_behavior"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: InputSettings can not be found")
+		return &medialive.InputSettings{}
+	}
 }
 
 func expandTimecodeConfigs(s *schema.Set) *medialive.TimecodeConfig {
-	return nil
+	if s.Len() > 0 {
+		rawTimecodeConfig := s.List()[0].(map[string]interface{})
+		return &medialive.TimecodeConfig{
+			Source:        aws.String(rawTimecodeConfig["source"].(string)),
+			SyncThreshold: aws.Int64(rawTimecodeConfig["sync_threshold"].(int64)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: TimecodeConfig can not be found")
+		return &medialive.TimecodeConfig{}
+	}
 }
 
 func expandVideoDescriptions(videoDescriptions []interface{}) []*medialive.VideoDescription {
