@@ -228,7 +228,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 															},
 
 															"sample_rate": {
-																Type:     schema.TypeString,
+																Type:     schema.TypeFloat,
 																Optional: true,
 															},
 
@@ -498,7 +498,12 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"base_url_content": {
-																Type:     schema.TypeInt,
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"base_url_manifest": {
+																Type:     schema.TypeString,
 																Optional: true,
 															},
 
@@ -506,6 +511,177 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																Default:  "OMIT",
+															},
+
+															"codec_specification": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"constant_iv": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"client_cache": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"hls_cdn_settings": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"hls_basic_put_settings": {
+																			Type:     schema.TypeSet,
+																			Required: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"connection_retry_interval": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																					},
+
+																					"filecache_duration": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																					},
+
+																					"num_retries": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																					},
+
+																					"restart_delay": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+
+															"encryption_type": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"hls_id3_segment_tagging": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"index_n_segments": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"input_loss_action": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"iv_in_manifest": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"iv_source": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"iframe_only_playlists": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"keep_segments": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"manifest_compression": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"manifest_duration_format": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"mode": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"output_selection": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"program_date_time": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"program_date_time_period": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"segmentation_mode": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"redundant_manifest": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"segment_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"directory_structure": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"segments_per_subdirectory": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"stream_inf_resolution": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"timed_metadata_id3_frame": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"timed_metadata_id3_period": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"timestamp_delta_milliseconds": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+
+															"ts_file_mode": {
+																Type:     schema.TypeString,
+																Optional: true,
 															},
 														},
 													},
@@ -521,7 +697,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"audio_description_names": {
 													Type:     schema.TypeList,
-													Optional: true,
+													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 
@@ -561,6 +737,11 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																						Required: true,
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
+																								"audio_rendition_sets": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+
 																								"m3u8_settings": {
 																									Type:     schema.TypeSet,
 																									Required: true,
@@ -673,7 +854,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 												"video_description_name": {
 													Type:     schema.TypeString,
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -1161,7 +1342,7 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 		)
 	}
 
-	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("encoder_settings"); ok {
 		input.EncoderSettings = expandEncoderSettings(
 			v.(*schema.Set),
 		)
