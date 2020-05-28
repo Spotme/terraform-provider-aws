@@ -568,7 +568,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																										Schema: map[string]*schema.Schema{
 																											"audio_frames_per_pes": {
 																												Type:     schema.TypeInt,
-																												Optional: true,
+																												Required: true,
 																											},
 
 																											"audio_pids": {
@@ -577,6 +577,71 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																											},
 
 																											"nielsen_id3_behavior": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"pat_interval": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																											},
+
+																											"pcr_control": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"pcr_period": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																											},
+
+																											"pcr_pid": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"pmt_interval": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																											},
+
+																											"pmt_pid": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"program_num": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																											},
+
+																											"scte_35_behavior": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"scte_35_pid": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"timed_metadata_behavior": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"timed_metadata_pid": {
+																												Type:     schema.TypeString,
+																												Optional: true,
+																											},
+
+																											"transport_stream_id": {
+																												Type:     schema.TypeInt,
+																												Optional: true,
+																											},
+
+																											"video_pid": {
 																												Type:     schema.TypeString,
 																												Optional: true,
 																											},
@@ -1196,7 +1261,7 @@ func resourceAwsMediaLiveChannelDelete(d *schema.ResourceData, meta interface{})
 func mediaLiveChannelRefreshFunc(conn *medialive.MediaLive, channelId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		channel, err := conn.DescribeChannel(&medialive.DescribeChannelInput{
-			ChannelId: aws.String(inputId),
+			ChannelId: aws.String(channelId),
 		})
 
 		if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
@@ -1204,14 +1269,14 @@ func mediaLiveChannelRefreshFunc(conn *medialive.MediaLive, channelId string) re
 		}
 
 		if err != nil {
-			return nil, "", fmt.Errorf("error reading MediaLive Input(%s): %s", inputId, err)
+			return nil, "", fmt.Errorf("error reading MediaLive Input(%s): %s", channelId, err)
 		}
 
-		if input == nil {
+		if channel == nil {
 			return nil, medialive.ChannelStateDeleted, nil
 		}
 
-		return input, aws.StringValue(channel.State), nil
+		return channel, aws.StringValue(channel.State), nil
 	}
 }
 
@@ -1224,7 +1289,7 @@ func waitForMediaLiveChannelDeletion(conn *medialive.MediaLive, channelId string
 		NotFoundChecks: 1,
 	}
 
-	log.Printf("[DEBUG] Waiting for Media Live Channel (%s) deletion", inputId)
+	log.Printf("[DEBUG] Waiting for Media Live Channel (%s) deletion", channelId)
 	_, err := stateConf.WaitForState()
 
 	if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
