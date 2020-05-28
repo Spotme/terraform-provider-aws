@@ -274,7 +274,6 @@ func waitForMediaLiveInputDeletion(conn *medialive.MediaLive, inputId string) er
 			medialive.InputStateDetached,
 			medialive.InputStateAttached,
 			medialive.InputStateDeleting,
-			medialive.InputStateDeleted,
 		},
 		Target:         []string{medialive.InputStateDeleted},
 		Refresh:        mediaLiveInputRefreshFunc(conn, inputId),

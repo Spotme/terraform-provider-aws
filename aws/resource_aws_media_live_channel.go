@@ -642,6 +642,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 						"video_descriptions": {
 							Type:     schema.TypeList,
 							Required: true,
+							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"height": {
@@ -1172,5 +1173,63 @@ func resourceAwsMediaLiveChannelUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsMediaLiveChannelDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).medialiveconn
+	input := &medialive.DeleteChannelInput{
+		ChannelId: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteChannel(input)
+	if err != nil {
+		if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("Error deleting MediaLive Channel(%s): %s", d.Id(), err)
+	}
+
+	if err := waitForMediaLiveChannelDeletion(conn, d.Id()); err != nil {
+		return fmt.Errorf("Error waiting for deleting MediaLive Channel(%s): %s", d.Id(), err)
+	}
+
 	return nil
+}
+
+func mediaLiveChannelRefreshFunc(conn *medialive.MediaLive, channelId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		channel, err := conn.DescribeChannel(&medialive.DescribeChannelInput{
+			ChannelId: aws.String(inputId),
+		})
+
+		if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
+			return nil, medialive.ChannelStateDeleted, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error reading MediaLive Input(%s): %s", inputId, err)
+		}
+
+		if input == nil {
+			return nil, medialive.ChannelStateDeleted, nil
+		}
+
+		return input, aws.StringValue(channel.State), nil
+	}
+}
+
+func waitForMediaLiveChannelDeletion(conn *medialive.MediaLive, channelId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{medialive.ChannelStateDeleting},
+		Target:         []string{medialive.ChannelStateDeleted},
+		Refresh:        mediaLiveChannelRefreshFunc(conn, channelId),
+		Timeout:        30 * time.Minute,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for Media Live Channel (%s) deletion", inputId)
+	_, err := stateConf.WaitForState()
+
+	if isAWSErr(err, medialive.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	return err
 }

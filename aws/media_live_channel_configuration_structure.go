@@ -153,23 +153,136 @@ func expandAacCodecSettings(s *schema.Set) *medialive.AacSettings {
 }
 
 func expandOutputGroups(outputGroups []interface{}) []*medialive.OutputGroup {
-	return nil
+	var result []*medialive.OutputGroup
+	if len(outputGroups) == 0 {
+		log.Printf("[ERROR] MediaLive Channel: Output group is a required field")
+		return nil
+	}
+
+	for _, v := range outputGroups {
+		r := v.(map[string]interface{})
+
+		result = append(result, &medialive.AudioDescription{
+			Name:                aws.String(r["name"].(string)),
+			OutputGroupSettings: expandOutputGroupSettings(r["output_group_settings"].([]interface{})),
+			Outputs:             expandOutputs(r["outputs"].([]interface{})),
+		})
+	}
+	return result
 }
 
 func expandOutputGroupSettings(outputGroupSettings []interface{}) []*medialive.OutputGroupSettings {
-	return nil
+	var result []*medialive.OutputGroupSettings
+	if len(outputGroupSettings) == 0 {
+		log.Printf("[WARN] MediaLive Channel: OutputGroupSettings are not specified")
+		return nil
+	}
+
+	for _, v := range outputGroupSettings {
+		r := v.(map[string]interface{})
+
+		result = append(result, &medialive.OutputGroupSettings{
+			HlsGroupSettings: expandHlsGroupSettings(r["hls_group_settings"].(*schema.Set)),
+		})
+	}
+	return result
 }
 
-func expandHlsGroupSettings(hlsGroupSettings []interface{}) []*medialive.HlsGroupSettings {
-	return nil
+func expandOutputs(outputs []interface{}) []*medialive.Output {
+	var result []*medialive.Output
+	if len(outputs) == 0 {
+		log.Printf("[WARN] MediaLive Channel: Outputs are not specified")
+		return nil
+	}
+
+	for _, v := range outputs {
+		r := v.(map[string]interface{})
+
+		result = append(result, &medialive.Output{
+			OutputName:            expandHlsGroupSettings(r["output"].(*schema.Set)),
+			AudioDescriptionNames: expandAudioDescriptionNames(r["audio_description_names"].([]*string)),
+			OutputSettings:        expandOutputSettings(r["output_settings"].([]interface{})),
+			VideoDescriptionNames: expandVideoDescriptionNames(r["video_description_names"].([]*string)),
+		})
+	}
+	return result
 }
 
 func expandOutputSettings(outputSettings []interface{}) []*medialive.OutputSettings {
-	return nil
+	var result []*medialive.OutputSettings
+	if len(outputSettings) == 0 {
+		log.Printf("[WARN] MediaLive Channel: OutputSettings are not specified")
+		return nil
+	}
+
+	for _, v := range outputSettings {
+		r := v.(map[string]interface{})
+
+		result = append(result, &medialive.OutputSettings{
+			HlsOutputSettings: expandHlsOutputSettings(r["hls_output_settings"].(*schema.Set)),
+		})
+	}
+	return result
 }
 
-func expandHlsSettings(hlsSettings []interface{}) []*medialive.HlsSettings {
-	return nil
+func expandHlsOutputSettings(s *schema.Set) *medialive.HlsOutputSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.HlsOutputSettings{
+			HlsSettings:     expandHlsSettings(settings["hls_output_settings"].(*schema.Set)),
+			NameModifier:    aws.String(settings["name_modifier"].(string)),
+			SegmentModifier: aws.String(settings["segment_modifier"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: HlsOutputSettings can not be found")
+		return &medialive.HlsOutputSettings{}
+	}
+}
+
+func expandHlsSettings(s *schema.Set) *medialive.HlsSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.HlsSettings{
+			StandardHlsSettings: expandStandardHlsSettings(r["standard_hls_settings"].(*schema.Set)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: HlsSettings can not be found")
+		return &medialive.HlsSettings{}
+	}
+}
+
+func expandStandardHlsSettings(s *schema.Set) *medialive.StandardHlsSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.StandardHlsSettings{
+			M3u8Settings: expandM3u8settings(r["m3u8_settings"].(*schema.Set)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: StandardHlsSettings can not be found")
+		return &medialive.StandardHlsSettings{}
+	}
+}
+
+func expandHlsGroupSettings(s *schema.Set) *medialive.HlsGroupSettings {
+	if s.Len() > 0 {
+		rawHlsSettings := s.List()[0].(map[string]interface{})
+		return &medialive.HlsGroupSetting{
+			Bitrate:                aws.Float64(rawAacSettings["bitrate"].(float64)),
+			BaseUrlContent:         aws.String(rawAacSettings["base_url_content"].(string)),
+			CaptionLanguageSetting: aws.String(rawAacSettings["caption_language_setting"].(string)),
+			CodecSpecification:     aws.String(rawAacSettings["codec_specification"].(string)),
+			ConstantIv:             aws.String(rawAacSettings["constant_iv"].(string)),
+			EncryptionType:         aws.String(rawAacSettings["encryption_type"].(string)),
+			HlsId3SegmentTagging:   aws.String(rawAacSettings["hls_id3_segment_tagging"].(string)),
+			IndexNSegments:         aws.String(rawAacSettings["index_n_segments"].(string)),
+			InputLossAction:        aws.String(rawAacSettings["input_loss_action"].(string)),
+			IvInManifest:           aws.String(rawAacSettings["iv_in_manifest"].(string)),
+			IvSource:               aws.String(rawAacSettings["iv_source"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: HLS Group settings can not be found")
+		return &medialive.HlsSettings{}
+	}
 }
 
 func expandInputAttachmentSettings(s *schema.Set) *medialive.InputSettings {
@@ -202,5 +315,52 @@ func expandTimecodeConfigs(s *schema.Set) *medialive.TimecodeConfig {
 }
 
 func expandVideoDescriptions(videoDescriptions []interface{}) []*medialive.VideoDescription {
-	return nil
+	var result []*medialive.VideoDescription
+	if len(videoDescriptions) == 0 {
+		log.Printf("[ERROR] MediaLive Channel: At least one video description is required for each encoder")
+		return nil
+	}
+
+	for _, descs := range videoDescriptions {
+		r := descs.(map[string]interface{})
+
+		result = append(result, &medialive.VideoDescription{
+			CodecSettings:   expandVideoCodecSettings(r["codec_settings"].(*schema.Set)),
+			Height:          aws.Int64(rawTimecodeConfig["height"].(int64)),
+			Name:            aws.String(r["name"].(string)),
+			RespondToAfd:    aws.String(r["respond_to_afd"].(string)),
+			ScalingBehavior: aws.String(r["scaling_behavior"].(string)),
+			Sharpness:       aws.Int64(rawTimecodeConfig["sharpness"].(int64)),
+			Width:           aws.Int64(rawTimecodeConfig["width"].(int64)),
+		})
+	}
+	return result
+}
+
+func expandVideoCodecSettings(s *schema.Set) *medialive.VideoCodecSettings {
+	if s.Len() > 0 {
+		rawVideoCodecSettings := s.List()[0].(map[string]interface{})
+		return &medialive.VideoCodecSettings{
+			H264Settings: expandH264Settings(rawCodecSettings["h264_settings"].(*schema.Set)),
+		}
+	} else {
+		log.Printf("[WARN] MediaLive Channel: VideoCodecSettings can not be found")
+		return &medialive.VideoCodecSettings{}
+	}
+}
+
+func expandH264Settings(s *schema.Set) *medialive.H264Settings {
+	if s.Len() > 0 {
+		rawSettings := s.List()[0].(map[string]interface{})
+		return &medialive.InputSettings{
+			AdaptiveQuantization: aws.String(rawSettings["adaptive_quantization"].(string)),
+			AfdSignaling:         aws.String(rawSettings["afd_signaling"].(string)),
+			Bitrate:              aws.Int64(rawSettings["bitrate"].(int64)),
+			BufFillPct:           aws.String(rawSettings["buf_fill_pct"].(string)),
+			BufSize:              aws.String(rawSettings["buf_size"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: H264 Settings can not be found")
+		return &medialive.InputSettings{}
+	}
 }
