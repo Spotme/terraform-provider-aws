@@ -290,7 +290,6 @@ func expandHlsGroupSettings(s *schema.Set) *medialive.HlsGroupSettings {
 			BaseUrlManifest:            aws.String(settings["base_url_manifest"].(string)),
 			CaptionLanguageSetting:     aws.String(settings["caption_language_setting"].(string)),
 			CodecSpecification:         aws.String(settings["codec_specification"].(string)),
-			ConstantIv:                 aws.String(settings["constant_iv"].(string)),
 			ClientCache:                aws.String(settings["client_cache"].(string)),
 			EncryptionType:             aws.String(settings["encryption_type"].(string)),
 			HlsCdnSettings:             expandHlsCdnSettings(settings["hls_cdn_settings"].(*schema.Set)),
@@ -310,6 +309,7 @@ func expandHlsGroupSettings(s *schema.Set) *medialive.HlsGroupSettings {
 			RedundantManifest:          aws.String(settings["redundant_manifest"].(string)),
 			SegmentationMode:           aws.String(settings["segmentation_mode"].(string)),
 			SegmentLength:              aws.Int64(int64(settings["segment_length"].(int))),
+			Destination:                expandHlsDestinationRef(settings["destination"].(*schema.Set)),
 			DirectoryStructure:         aws.String(settings["directory_structure"].(string)),
 			SegmentsPerSubdirectory:    aws.Int64(int64(settings["segments_per_subdirectory"].(int))),
 			StreamInfResolution:        aws.String(settings["stream_inf_resolution"].(string)),
@@ -336,6 +336,18 @@ func expandHlsCdnSettings(s *schema.Set) *medialive.HlsCdnSettings {
 	} else {
 		log.Printf("[WARN] MediaLive Channel: HlsCdnSettings can not be found")
 		return &medialive.HlsCdnSettings{}
+	}
+}
+
+func expandHlsDestinationRef(s *schema.Set) *medialive.OutputLocationRef {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.OutputLocationRef{
+			DestinationRefId: aws.String(settings["destination_ref_id"].(string)),
+		}
+	} else {
+		log.Printf("[WARN] MediaLive Channel: HLS Destination (OutputLocationRef) can not be found")
+		return &medialive.OutputLocationRef{}
 	}
 }
 

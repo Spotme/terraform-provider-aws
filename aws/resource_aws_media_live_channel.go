@@ -649,6 +649,19 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																Optional: true,
 															},
 
+															"destination": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"destination_ref_id": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
 															"directory_structure": {
 																Type:     schema.TypeString,
 																Optional: true,
