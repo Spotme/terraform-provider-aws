@@ -990,7 +990,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																Optional: true,
 															},
 
-															"frame_rate_control": {
+															"framerate_control": {
 																Type:     schema.TypeString,
 																Optional: true,
 															},

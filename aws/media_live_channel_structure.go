@@ -111,10 +111,11 @@ func expandAudioDescriptions(audioDescriptions []interface{}) []*medialive.Audio
 		r := descs.(map[string]interface{})
 
 		result = append(result, &medialive.AudioDescription{
-			AudioSelectorName: aws.String(r["audio_selector_name"].(string)),
-			Name:              aws.String(r["name"].(string)),
-			StreamName:        aws.String(r["stream_name"].(string)),
-			CodecSettings:     expandAudioCodecSettings(r["codec_settings"].(*schema.Set)),
+			AudioSelectorName:   aws.String(r["audio_selector_name"].(string)),
+			Name:                aws.String(r["name"].(string)),
+			CodecSettings:       expandAudioCodecSettings(r["codec_settings"].(*schema.Set)),
+			AudioTypeControl:    aws.String(r["audio_type_control"].(string)),
+			LanguageCodeControl: aws.String(r["language_code_control"].(string)),
 		})
 	}
 	return result
@@ -144,7 +145,6 @@ func expandAacCodecSettings(s *schema.Set) *medialive.AacSettings {
 			RawFormat:       aws.String(rawAacSettings["raw_format"].(string)),
 			SampleRate:      aws.Float64(rawAacSettings["sample_rate"].(float64)),
 			Spec:            aws.String(rawAacSettings["spec"].(string)),
-			VbrQuality:      aws.String(rawAacSettings["vbr_quality"].(string)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: AAC Specification can not be found")
@@ -264,16 +264,12 @@ func expandM3u8settings(s *schema.Set) *medialive.M3u8Settings {
 			NielsenId3Behavior:    aws.String(settings["nielsen_id3_behavior"].(string)),
 			PatInterval:           aws.Int64(int64(settings["pat_interval"].(int))),
 			PcrControl:            aws.String(settings["pcr_control"].(string)),
-			PcrPeriod:             aws.Int64(int64(settings["pcr_period"].(int))),
-			PcrPid:                aws.String(settings["pcr_pid"].(string)),
-			PmtInterval:           aws.Int64(int64(settings["pmt_interval"].(int))),
 			PmtPid:                aws.String(settings["pmt_pid"].(string)),
 			ProgramNum:            aws.Int64(int64(settings["program_num"].(int))),
 			Scte35Behavior:        aws.String(settings["scte_35_behavior"].(string)),
 			Scte35Pid:             aws.String(settings["scte_35_pid"].(string)),
 			TimedMetadataBehavior: aws.String(settings["timed_metadata_behavior"].(string)),
 			TimedMetadataPid:      aws.String(settings["timed_metadata_pid"].(string)),
-			TransportStreamId:     aws.Int64(int64(settings["transport_stream_id"].(int))),
 			VideoPid:              aws.String(settings["video_pid"].(string)),
 		}
 	} else {
@@ -286,12 +282,9 @@ func expandHlsGroupSettings(s *schema.Set) *medialive.HlsGroupSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
 		return &medialive.HlsGroupSettings{
-			BaseUrlContent:             aws.String(settings["base_url_content"].(string)),
-			BaseUrlManifest:            aws.String(settings["base_url_manifest"].(string)),
 			CaptionLanguageSetting:     aws.String(settings["caption_language_setting"].(string)),
 			CodecSpecification:         aws.String(settings["codec_specification"].(string)),
 			ClientCache:                aws.String(settings["client_cache"].(string)),
-			EncryptionType:             aws.String(settings["encryption_type"].(string)),
 			HlsCdnSettings:             expandHlsCdnSettings(settings["hls_cdn_settings"].(*schema.Set)),
 			HlsId3SegmentTagging:       aws.String(settings["hls_id3_segment_tagging"].(string)),
 			IndexNSegments:             aws.Int64(int64(settings["index_n_segments"].(int))),
@@ -437,8 +430,30 @@ func expandH264Settings(s *schema.Set) *medialive.H264Settings {
 			AdaptiveQuantization: aws.String(rawSettings["adaptive_quantization"].(string)),
 			AfdSignaling:         aws.String(rawSettings["afd_signaling"].(string)),
 			Bitrate:              aws.Int64(int64(rawSettings["bitrate"].(int))),
-			BufFillPct:           aws.Int64(int64(rawSettings["buf_fill_pct"].(int))),
-			BufSize:              aws.Int64(int64(rawSettings["buf_size"].(int))),
+			ColorMetadata:        aws.String(rawSettings["color_metadata"].(string)),
+			EntropyEncoding:      aws.String(rawSettings["entropy_encoding"].(string)),
+			FlickerAq:            aws.String(rawSettings["flicker_aq"].(string)),
+			ForceFieldPictures:   aws.String(rawSettings["force_field_pictures"].(string)),
+			FramerateControl:     aws.String(rawSettings["framerate_control"].(string)),
+			FramerateDenominator: aws.Int64(int64(rawSettings["framerate_denominator"].(int))),
+			FramerateNumerator:   aws.Int64(int64(rawSettings["framerate_numerator"].(int))),
+			GopBReference:        aws.String(rawSettings["gop_b_reference"].(string)),
+			GopClosedCadence:     aws.Int64(int64(rawSettings["gop_closed_cadence"].(int))),
+			GopNumBFrames:        aws.Int64(int64(rawSettings["gop_num_b_frames"].(int))),
+			GopSize:              aws.Float64(rawSettings["gop_size"].(float64)),
+			GopSizeUnits:         aws.String(rawSettings["gop_size_units"].(string)),
+			Level:                aws.String(rawSettings["level"].(string)),
+			LookAheadRateControl: aws.String(rawSettings["look_ahead_rate_control"].(string)),
+			NumRefFrames:         aws.Int64(int64(rawSettings["num_ref_frames"].(int))),
+			ParControl:           aws.String(rawSettings["par_control"].(string)),
+			QualityLevel:         aws.String(rawSettings["quality_level"].(string)),
+			Profile:              aws.String(rawSettings["profile"].(string)),
+			RateControlMode:      aws.String(rawSettings["rate_control_mode"].(string)),
+			Syntax:               aws.String(rawSettings["syntax"].(string)),
+			SceneChangeDetect:    aws.String(rawSettings["scene_change_detect"].(string)),
+			SpatialAq:            aws.String(rawSettings["spatial_aq"].(string)),
+			TemporalAq:           aws.String(rawSettings["temporal_aq"].(string)),
+			TimecodeInsertion:    aws.String(rawSettings["timecode_insertion"].(string)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: H264Settings can not be found")
