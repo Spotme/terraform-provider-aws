@@ -2,15 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"log"
-	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/medialive"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -24,45 +19,45 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.String,
-				Required: true,
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"channel_id": {
-				Type:     schema.String,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 
 			"description": {
-				Type:     schema.String,
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 
 			"startover_window_seconds": {
-				Type:     schema.Int,
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 
 			"time_delay_seconds": {
-				Type:     schema.Int,
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 
 			"manifest_name": {
-				Type:     schema.String,
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 
 			"whitelist": {
-				Type:     schema.List,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"hls_package": {
-				Type:    schema.Set,
-				Optinal: true,
+				Type:     schema.TypeSet,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"segment_duration_seconds": {
@@ -112,8 +107,8 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 						},
 
 						"stream_selection": {
-							Type:    schema.Set,
-							Optinal: true,
+							Type:     schema.TypeSet,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"stream_order": {
@@ -126,6 +121,7 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 					},
 				},
 			},
+
 			"origination": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -141,7 +137,6 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 
 	input := &mediapackage.CreateOriginEndpointInput{
 		ChannelId:    aws.String(d.Get("channel_id").(string)),
-		Id:           aws.String(d.Get("id").(string)),
 		Description:  aws.String(d.Get("description").(string)),
 		ManifestName: aws.String(d.Get("manifest_name").(string)),
 	}
@@ -155,7 +150,7 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 		return fmt.Errorf("Error creating MediaPackage Origin Endpoint: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Channel.Id))
+	d.SetId(aws.StringValue(resp.Id))
 
 	return resourceAwsMediaPackageOriginEndpointRead(d, meta)
 }

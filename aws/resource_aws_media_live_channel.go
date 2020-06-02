@@ -99,21 +99,6 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				},
 			},
 
-			// The endpoints where outgoing connections initiate from
-			"egress_endpoints": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// Public IP of where a channel's output comes from
-						"source_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
 			// Encoder Settings
 			"encoder_settings": {
 				Type:     schema.TypeSet,
@@ -1280,33 +1265,6 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-
-			"pipeline_details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						// The name of the active input attachment currently being ingested by this pipeline.
-						"active_input_attachment_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						// The name of the input switch schedule action that occurred most recently
-						// and that resulted in the switch to the current input attachment for this
-						// pipeline.
-						"active_input_switch_action_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"pipeline_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 
 			"pipelines_running_count": {
