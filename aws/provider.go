@@ -682,6 +682,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_media_live_input":                                    resourceAwsMediaLiveInput(),
 			"aws_media_live_channel":                                  resourceAwsMediaLiveChannel(),
 			"aws_media_package_channel":                               resourceAwsMediaPackageChannel(),
+			"aws_media_package_origin_endpoint":                       resourceAwsMediaPackageOriginEndpoint(),
 			"aws_media_store_container":                               resourceAwsMediaStoreContainer(),
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
 			"aws_msk_cluster":                                         resourceAwsMskCluster(),
