@@ -77,6 +77,7 @@ func resourceAwsMediaLiveInput() *schema.Resource {
 			"input_security_groups": {
 				Type:     schema.TypeList,
 				Required: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 

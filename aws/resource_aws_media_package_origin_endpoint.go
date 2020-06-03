@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
@@ -25,6 +26,11 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 			},
 
 			"channel_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -70,8 +76,8 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 							Optional: true,
 						},
 
-						"play_list_type": {
-							Type:     schema.TypeInt,
+						"playlist_type": {
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 
@@ -115,11 +121,26 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+
+									"max_video_bits_per_second": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+
+									"min_video_bits_per_second": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
 								},
 							},
 						},
 					},
 				},
+			},
+
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			"origination": {
@@ -136,9 +157,17 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 	conn := meta.(*AWSClient).mediapackageconn
 
 	input := &mediapackage.CreateOriginEndpointInput{
-		ChannelId:    aws.String(d.Get("channel_id").(string)),
-		Description:  aws.String(d.Get("description").(string)),
-		ManifestName: aws.String(d.Get("manifest_name").(string)),
+		Id:                     aws.String(d.Get("endpoint_id").(string)),
+		ChannelId:              aws.String(d.Get("channel_id").(string)),
+		Description:            aws.String(d.Get("description").(string)),
+		ManifestName:           aws.String(d.Get("manifest_name").(string)),
+		Origination:            aws.String(d.Get("origination").(string)),
+		StartoverWindowSeconds: aws.Int64(int64(d.Get("startover_window_seconds").(int))),
+		TimeDelaySeconds:       aws.Int64(int64(d.Get("time_delay_seconds").(int))),
+	}
+
+	if v, ok := d.GetOk("hls_package"); ok {
+		input.HlsPackage = expandHlsPackage(v.(*schema.Set))
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -156,6 +185,32 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsMediaPackageOriginEndpointRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).mediapackageconn
+
+	input := &mediapackage.DescribeOriginEndpointInput{
+		Id: aws.String(d.Get("endpoint_id").(string)),
+	}
+
+	resp, err := conn.DescribeOriginEndpoint(input)
+	if err != nil {
+		if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] MediaPackage Origin Endpoint %s not found, error code (404)", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error describing MediaPackage Origin Endpoint(%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", aws.StringValue(resp.Arn))
+	d.Set("description", aws.StringValue(resp.Description))
+	d.Set("manifest_name", aws.StringValue(resp.ManifestName))
+	d.Set("origination", aws.StringValue(resp.Origination))
+	d.Set("url", aws.StringValue(resp.Url))
+
+	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -164,5 +219,54 @@ func resourceAwsMediaPackageOriginEndpointUpdate(d *schema.ResourceData, meta in
 }
 
 func resourceAwsMediaPackageOriginEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).mediapackageconn
+
+	input := &mediapackage.DeleteOriginEndpointInput{
+		Id: aws.String(d.Id()),
+	}
+
+	_, err := conn.DeleteOriginEndpoint(input)
+	if err != nil {
+		if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("Error deleting MediaPackage Origin Endpoint(%s): %s", d.Id(), err)
+	}
+
 	return nil
+}
+
+func expandHlsPackage(s *schema.Set) *mediapackage.HlsPackage {
+	if s.Len() > 0 {
+		rawSettings := s.List()[0].(map[string]interface{})
+		return &mediapackage.HlsPackage{
+			SegmentDurationSeconds:         aws.Int64(int64(rawSettings["segment_duration_seconds"].(int))),
+			PlaylistWindowSeconds:          aws.Int64(int64(rawSettings["playlist_window_seconds"].(int))),
+			PlaylistType:                   aws.String(rawSettings["playlist_type"].(string)),
+			AdMarkers:                      aws.String(rawSettings["ad_markers"].(string)),
+			AdTriggers:                     expandStringList(rawSettings["ad_triggers"].([]interface{})),
+			AdsOnDeliveryRestrictions:      aws.String(rawSettings["ads_on_delivery_restrictions"].(string)),
+			ProgramDateTimeIntervalSeconds: aws.Int64(int64(rawSettings["program_date_time_interval_seconds"].(int))),
+			IncludeIframeOnlyStream:        aws.Bool(rawSettings["include_iframe_only_stream"].(bool)),
+			UseAudioRenditionGroup:         aws.Bool(rawSettings["use_audio_rendition_group"].(bool)),
+			StreamSelection:                expandStreamSelection(rawSettings["stream_selection"].(*schema.Set)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaPackage OriginEndpoint: HlsPackage settings can not be found")
+		return &mediapackage.HlsPackage{}
+	}
+}
+
+func expandStreamSelection(s *schema.Set) *mediapackage.StreamSelection {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &mediapackage.StreamSelection{
+			MaxVideoBitsPerSecond: aws.Int64(int64(settings["max_video_bits_per_second"].(int))),
+			MinVideoBitsPerSecond: aws.Int64(int64(settings["min_video_bits_per_second"].(int))),
+			StreamOrder:           aws.String(settings["stream_order"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaPackage OriginEndpoint: StreamSelection settings can not be found")
+		return &mediapackage.StreamSelection{}
+	}
 }

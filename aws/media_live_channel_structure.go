@@ -430,6 +430,8 @@ func expandH264Settings(s *schema.Set) *medialive.H264Settings {
 			AdaptiveQuantization: aws.String(rawSettings["adaptive_quantization"].(string)),
 			AfdSignaling:         aws.String(rawSettings["afd_signaling"].(string)),
 			Bitrate:              aws.Int64(int64(rawSettings["bitrate"].(int))),
+			BufFillPct:           aws.Int64(int64(rawSettings["buf_fill_pct"].(int))),
+			BufSize:              aws.Int64(int64(rawSettings["buf_size"].(int))),
 			ColorMetadata:        aws.String(rawSettings["color_metadata"].(string)),
 			EntropyEncoding:      aws.String(rawSettings["entropy_encoding"].(string)),
 			FlickerAq:            aws.String(rawSettings["flicker_aq"].(string)),
