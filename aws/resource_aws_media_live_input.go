@@ -297,8 +297,8 @@ func flattenInputDestinations(inputDestinations []*medialive.InputDestination) [
 	for _, destination := range inputDestinations {
 		r := map[string]interface{}{
 			"url":         aws.StringValue(destination.Url),
-			"port":        aws.StringValue(destination.Ip),
-			"ip":          aws.StringValue(destination.Port),
+			"port":        aws.StringValue(destination.Port),
+			"ip":          aws.StringValue(destination.Ip),
 			"stream_name": obtainStreamName(destination.Url),
 		}
 		result = append(result, r)
