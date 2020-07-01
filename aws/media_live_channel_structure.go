@@ -234,7 +234,8 @@ func expandHlsSettings(s *schema.Set) *medialive.HlsSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
 		return &medialive.HlsSettings{
-			StandardHlsSettings: expandStandardHlsSettings(settings["standard_hls_settings"].(*schema.Set)),
+			StandardHlsSettings:  expandStandardHlsSettings(settings["standard_hls_settings"].(*schema.Set)),
+			AudioOnlyHlsSettings: expandAudioOnlyHlsSettings(settings["audio_only_hls_settings"].(*schema.Set)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: HlsSettings can not be found")
@@ -250,8 +251,20 @@ func expandStandardHlsSettings(s *schema.Set) *medialive.StandardHlsSettings {
 			M3u8Settings:       expandM3u8settings(settings["m3u8_settings"].(*schema.Set)),
 		}
 	} else {
-		log.Printf("[ERROR] MediaLive Channel: StandardHlsSettings can not be found")
-		return &medialive.StandardHlsSettings{}
+		return nil
+	}
+}
+
+func expandAudioOnlyHlsSettings(s *schema.Set) *medialive.AudioOnlyHlsSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.AudioOnlyHlsSettings{
+			AudioGroupId:   aws.String(settings["audio_group_id"].(string)),
+			AudioTrackType: aws.String(settings["audio_track_type"].(string)),
+			SegmentType:    aws.String(settings["segment_type"].(string)),
+		}
+	} else {
+		return nil
 	}
 }
 

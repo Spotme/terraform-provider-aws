@@ -717,7 +717,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"hls_output_settings": {
 																Type:     schema.TypeSet,
-																Required: true,
+																Optional: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"h_265_packaging_type": {
@@ -727,22 +727,22 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 																		"hls_settings": {
 																			Type:     schema.TypeSet,
-																			Required: true,
+																			Optional: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					"standard_hls_settings": {
 																						Type:     schema.TypeSet,
-																						Required: true,
+																						Optional: true,
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
 																								"audio_rendition_sets": {
 																									Type:     schema.TypeString,
-																									Required: true,
+																									Optional: true,
 																								},
 
 																								"m3u8_settings": {
 																									Type:     schema.TypeSet,
-																									Required: true,
+																									Optional: true,
 																									Elem: &schema.Resource{
 																										Schema: map[string]*schema.Schema{
 																											"audio_frames_per_pes": {
@@ -830,6 +830,29 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																							},
 																						},
 																					},
+
+																					"audio_only_hls_settings": {
+																						Type:     schema.TypeSet,
+																						Optional: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"audio_track_type": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+
+																								"audio_group_id": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+
+																								"segment_type": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
 																				},
 																			},
 																		},
@@ -852,7 +875,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 												"video_description_name": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -1331,7 +1354,7 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(aws.StringValue(resp.Channel.Id))
 
 	createStateConf := &resource.StateChangeConf{
-		Pending: []string{"CREATING", "UPDATING"},
+		Pending: []string{"CREATING"},
 		Target:  []string{"IDLE"},
 		Refresh: func() (interface{}, string, error) {
 			input := &medialive.DescribeChannelInput{
@@ -1386,6 +1409,66 @@ func resourceAwsMediaLiveChannelRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsMediaLiveChannelUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).medialiveconn
+
+	input := &medialive.UpdateChannelInput{
+		ChannelId: aws.String(d.Id()),
+		Name:      aws.String(d.Get("name").(string)),
+		RoleArn:   aws.String(d.Get("role_arn").(string)),
+		LogLevel:  aws.String(d.Get("log_level").(string)),
+	}
+
+	if v, ok := d.GetOk("input_specification"); ok {
+		input.InputSpecification = expandInputSpecification(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("input_attachments"); ok && len(v.([]interface{})) > 0 {
+		input.InputAttachments = expandInputAttachments(
+			v.([]interface{}),
+		)
+	}
+
+	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
+		input.Destinations = expandDestinations(
+			v.([]interface{}),
+		)
+	}
+
+	if v, ok := d.GetOk("encoder_settings"); ok {
+		input.EncoderSettings = expandEncoderSettings(
+			v.(*schema.Set),
+		)
+	}
+
+	_, err := conn.UpdateChannel(input)
+	if err != nil {
+		return fmt.Errorf("Error updating MediaLive Channel: %s", err)
+	}
+
+	updateStateConf := &resource.StateChangeConf{
+		Pending: []string{"UPDATING"},
+		Target:  []string{"IDLE"},
+		Refresh: func() (interface{}, string, error) {
+			input := &medialive.DescribeChannelInput{
+				ChannelId: aws.String(d.Id()),
+			}
+			resp, err := conn.DescribeChannel(input)
+			if err != nil {
+				return 0, "", err
+			}
+			return resp, aws.StringValue(resp.State), nil
+		},
+		Timeout:                   d.Timeout(schema.TimeoutCreate),
+		Delay:                     10 * time.Second,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+	}
+	_, err = updateStateConf.WaitForState()
+
+	if err != nil {
+		return fmt.Errorf("Error waiting for MediaLive Channel (%s) update to be completed: %s", d.Id(), err)
+	}
+
 	return resourceAwsMediaLiveChannelRead(d, meta)
 }
 

@@ -215,6 +215,25 @@ func resourceAwsMediaPackageOriginEndpointRead(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsMediaPackageOriginEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).mediapackageconn
+
+	input := &mediapackage.UpdateOriginEndpointInput{
+		Id:                     aws.String(d.Get("endpoint_id").(string)),
+		Description:            aws.String(d.Get("description").(string)),
+		ManifestName:           aws.String(d.Get("manifest_name").(string)),
+		Origination:            aws.String(d.Get("origination").(string)),
+		StartoverWindowSeconds: aws.Int64(int64(d.Get("startover_window_seconds").(int))),
+		TimeDelaySeconds:       aws.Int64(int64(d.Get("time_delay_seconds").(int))),
+	}
+
+	if v, ok := d.GetOk("hls_package"); ok {
+		input.HlsPackage = expandHlsPackage(v.(*schema.Set))
+	}
+
+	_, err := conn.UpdateOriginEndpoint(input)
+	if err != nil {
+		return fmt.Errorf("Error updating MediaPackage Origin Endpoint: %s", err)
+	}
 	return resourceAwsMediaPackageOriginEndpointRead(d, meta)
 }
 
