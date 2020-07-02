@@ -193,11 +193,17 @@ func expandOutputs(outputs []interface{}) []*medialive.Output {
 	for _, v := range outputs {
 		r := v.(map[string]interface{})
 
+		videoDescName := r["video_description_name"].(string)
+		var videoDescNameAws *string
+		if len(videoDescName) > 0 {
+			videoDescNameAws = aws.String(videoDescName)
+		}
+
 		result = append(result, &medialive.Output{
 			OutputName:            aws.String(r["output_name"].(string)),
 			AudioDescriptionNames: expandStringList(r["audio_description_names"].([]interface{})),
 			OutputSettings:        expandOutputSettings(r["output_settings"].(*schema.Set)),
-			VideoDescriptionName:  aws.String(r["video_description_name"].(string)),
+			VideoDescriptionName:  videoDescNameAws,
 		})
 	}
 	return result
