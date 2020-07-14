@@ -25,6 +25,24 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 				Computed: true,
 			},
 
+			"authorization": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cdn_identifier_secret": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"secrets_role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+
 			"channel_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -166,6 +184,10 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 		TimeDelaySeconds:       aws.Int64(int64(d.Get("time_delay_seconds").(int))),
 	}
 
+	if v, ok := d.GetOk("authorization"); ok {
+		input.Authorization = expandAuthorization(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("hls_package"); ok {
 		input.HlsPackage = expandHlsPackage(v.(*schema.Set))
 	}
@@ -206,6 +228,10 @@ func resourceAwsMediaPackageOriginEndpointRead(d *schema.ResourceData, meta inte
 	d.Set("manifest_name", aws.StringValue(resp.ManifestName))
 	d.Set("origination", aws.StringValue(resp.Origination))
 	d.Set("url", aws.StringValue(resp.Url))
+
+	if resp.Authorization != nil {
+		d.Set("authorization", flattenAuthorization(resp.Authorization))
+	}
 
 	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -288,4 +314,24 @@ func expandStreamSelection(s *schema.Set) *mediapackage.StreamSelection {
 		log.Printf("[ERROR] MediaPackage OriginEndpoint: StreamSelection settings can not be found")
 		return &mediapackage.StreamSelection{}
 	}
+}
+
+func expandAuthorization(s *schema.Set) *mediapackage.Authorization {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &mediapackage.Authorization{
+			CdnIdentifierSecret: aws.String(settings["cdn_identifier_secret"].(string)),
+			SecretsRoleArn:      aws.String(settings["secrets_role_arn"].(string)),
+		}
+	} else {
+		return nil
+	}
+}
+
+func flattenAuthorization(auth *mediapackage.Authorization) map[string]interface{} {
+	m := map[string]interface{}{
+		"cdn_identifier_secret": aws.StringValue(auth.CdnIdentifierSecret),
+		"secrets_role_arn":      aws.StringValue(auth.SecretsRoleArn),
+	}
+	return m
 }
