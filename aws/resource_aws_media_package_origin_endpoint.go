@@ -256,6 +256,10 @@ func resourceAwsMediaPackageOriginEndpointUpdate(d *schema.ResourceData, meta in
 		input.HlsPackage = expandHlsPackage(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("authorization"); ok {
+		input.Authorization = expandAuthorization(v.(*schema.Set))
+	}
+
 	_, err := conn.UpdateOriginEndpoint(input)
 	if err != nil {
 		return fmt.Errorf("Error updating MediaPackage Origin Endpoint: %s", err)
