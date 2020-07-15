@@ -26,8 +26,9 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 			},
 
 			"authorization": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cdn_identifier_secret": {
@@ -185,7 +186,7 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("authorization"); ok {
-		input.Authorization = expandAuthorization(v.(*schema.Set))
+		input.Authorization = expandAuthorization(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("hls_package"); ok {
@@ -257,7 +258,7 @@ func resourceAwsMediaPackageOriginEndpointUpdate(d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("authorization"); ok {
-		input.Authorization = expandAuthorization(v.(*schema.Set))
+		input.Authorization = expandAuthorization(v.([]interface{}))
 	}
 
 	_, err := conn.UpdateOriginEndpoint(input)
@@ -320,22 +321,19 @@ func expandStreamSelection(s *schema.Set) *mediapackage.StreamSelection {
 	}
 }
 
-func expandAuthorization(s *schema.Set) *mediapackage.Authorization {
-	if s.Len() > 0 {
-		settings := s.List()[0].(map[string]interface{})
-		return &mediapackage.Authorization{
-			CdnIdentifierSecret: aws.String(settings["cdn_identifier_secret"].(string)),
-			SecretsRoleArn:      aws.String(settings["secrets_role_arn"].(string)),
-		}
-	} else {
-		return nil
+func expandAuthorization(lst []interface{}) *mediapackage.Authorization {
+	settings := lst[0].(map[string]interface{})
+	return &mediapackage.Authorization{
+		CdnIdentifierSecret: aws.String(settings["cdn_identifier_secret"].(string)),
+		SecretsRoleArn:      aws.String(settings["secrets_role_arn"].(string)),
 	}
 }
 
-func flattenAuthorization(auth *mediapackage.Authorization) map[string]interface{} {
+func flattenAuthorization(auth *mediapackage.Authorization) []interface{} {
+	lst := []interface{}{}
 	m := map[string]interface{}{
 		"cdn_identifier_secret": aws.StringValue(auth.CdnIdentifierSecret),
 		"secrets_role_arn":      aws.StringValue(auth.SecretsRoleArn),
 	}
-	return m
+	return append(lst, m)
 }
