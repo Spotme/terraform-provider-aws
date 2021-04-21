@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -21,22 +21,22 @@ func init() {
 		Dependencies: []string{
 			"aws_api_gateway_rest_api",
 			"aws_cloudhsm_v2_cluster",
-			// Not currently implemented: "aws_cloudtrail",
+			"aws_cloudtrail",
 			"aws_datasync_task",
 			"aws_db_instance",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_eks_cluster",
 			"aws_elasticsearch_domain",
-			// Not currently implemented: "aws_flow_log",
+			"aws_flow_log",
 			"aws_glue_job",
-			// Not currently implemented: "aws_kinesis_analytics_application",
+			"aws_kinesis_analytics_application",
 			"aws_kinesis_firehose_delivery_stream",
 			"aws_lambda_function",
 			"aws_mq_broker",
 			"aws_msk_cluster",
 			"aws_rds_cluster",
-			// Not currently implemented: "aws_route53_query_log",
+			"aws_route53_query_log",
 			"aws_sagemaker_endpoint",
 			"aws_storagegateway_gateway",
 		},
@@ -53,9 +53,9 @@ func testSweepCloudwatchLogGroups(region string) error {
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 
-	err = conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, isLast bool) bool {
+	err = conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
 		if page == nil {
-			return !isLast
+			return !lastPage
 		}
 
 		for _, logGroup := range page.LogGroups {
@@ -79,7 +79,7 @@ func testSweepCloudwatchLogGroups(region string) error {
 			}
 		}
 
-		return !isLast
+		return !lastPage
 	})
 
 	if testSweepSkipSweepError(err) {
@@ -101,6 +101,7 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +109,10 @@ func TestAccAWSCloudWatchLogGroup_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchLogGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchLogGroupExists(resourceName, &lg),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:foo-bar-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("foo-bar-%d", rInt)),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -127,6 +131,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -154,6 +159,7 @@ func TestAccAWSCloudWatchLogGroup_namePrefix_retention(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -189,6 +195,7 @@ func TestAccAWSCloudWatchLogGroup_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -215,6 +222,7 @@ func TestAccAWSCloudWatchLogGroup_retentionPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -249,6 +257,7 @@ func TestAccAWSCloudWatchLogGroup_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -280,6 +289,7 @@ func TestAccAWSCloudWatchLogGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -302,6 +312,7 @@ func TestAccAWSCloudWatchLogGroup_tagging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -364,6 +375,7 @@ func TestAccAWSCloudWatchLogGroup_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
+		ErrorCheck:   testAccErrorCheck(t, cloudwatchlogs.EndpointsID),
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchLogGroupDestroy,
 		Steps: []resource.TestStep{
@@ -431,8 +443,9 @@ func testAccCheckAWSCloudWatchLogGroupDestroy(s *terraform.State) error {
 			continue
 		}
 		logGroup, err := lookupCloudWatchLogGroup(conn, rs.Primary.ID)
+
 		if err != nil {
-			return nil
+			return fmt.Errorf("error reading CloudWatch Log Group (%s): %w", rs.Primary.ID, err)
 		}
 
 		if logGroup != nil {
@@ -558,14 +571,14 @@ POLICY
 
 resource "aws_cloudwatch_log_group" "test" {
   name       = "foo-bar-%d"
-  kms_key_id = "${aws_kms_key.foo.arn}"
+  kms_key_id = aws_kms_key.foo.arn
 }
 `, rInt, rInt)
 }
 
 const testAccAWSCloudWatchLogGroup_namePrefix = `
 resource "aws_cloudwatch_log_group" "test" {
-    name_prefix = "tf-test-"
+  name_prefix = "tf-test-"
 }
 `
 
