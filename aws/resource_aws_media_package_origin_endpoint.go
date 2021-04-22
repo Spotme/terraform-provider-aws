@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -209,6 +209,7 @@ func resourceAwsMediaPackageOriginEndpointCreate(d *schema.ResourceData, meta in
 
 func resourceAwsMediaPackageOriginEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mediapackageconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &mediapackage.DescribeOriginEndpointInput{
 		Id: aws.String(d.Get("endpoint_id").(string)),
@@ -224,17 +225,17 @@ func resourceAwsMediaPackageOriginEndpointRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("Error describing MediaPackage Origin Endpoint(%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", aws.StringValue(resp.Arn))
-	d.Set("description", aws.StringValue(resp.Description))
-	d.Set("manifest_name", aws.StringValue(resp.ManifestName))
-	d.Set("origination", aws.StringValue(resp.Origination))
-	d.Set("url", aws.StringValue(resp.Url))
+	d.Set("arn", resp.Arn)
+	d.Set("description", resp.Description)
+	d.Set("manifest_name", resp.ManifestName)
+	d.Set("origination", resp.Origination)
+	d.Set("url", resp.Url)
 
 	if resp.Authorization != nil {
 		d.Set("authorization", flattenAuthorization(resp.Authorization))
 	}
 
-	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/medialive"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -1382,6 +1382,7 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 
 func resourceAwsMediaLiveChannelRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).medialiveconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &medialive.DescribeChannelInput{
 		ChannelId: aws.String(d.Id()),
@@ -1397,11 +1398,11 @@ func resourceAwsMediaLiveChannelRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error describing MediaLive Channel(%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", aws.StringValue(resp.Arn))
-	d.Set("name", aws.StringValue(resp.Name))
-	d.Set("role_arn", aws.StringValue(resp.RoleArn))
+	d.Set("arn", resp.Arn)
+	d.Set("name", resp.Name)
+	d.Set("role_arn", resp.RoleArn)
 
-	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
