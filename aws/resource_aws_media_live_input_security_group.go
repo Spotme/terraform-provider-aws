@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -72,6 +71,7 @@ func resourceAwsMediaLiveInputSecurityGroupCreate(d *schema.ResourceData, meta i
 
 func resourceAwsMediaLiveInputSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).medialiveconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &medialive.DescribeInputSecurityGroupInput{
 		InputSecurityGroupId: aws.String(d.Id()),
@@ -87,13 +87,13 @@ func resourceAwsMediaLiveInputSecurityGroupRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error describing MediaLive Input Security Group(%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", aws.StringValue(resp.Arn))
+	d.Set("arn", resp.Arn)
 
 	if err := d.Set("whitelist_rule", flattenWhitelistRules(resp.WhitelistRules)); err != nil {
 		return fmt.Errorf("error setting whitelist_rule: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -150,6 +150,7 @@ func resourceAwsMediaLiveInputCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).medialiveconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &medialive.DescribeInputInput{
 		InputId: aws.String(d.Id()),
@@ -169,12 +170,12 @@ func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting destinations: %s", err)
 	}
 
-	d.Set("arn", aws.StringValue(resp.Arn))
-	d.Set("type", aws.StringValue(resp.Type))
-	d.Set("name", aws.StringValue(resp.Name))
-	d.Set("input_class", aws.StringValue(resp.InputClass))
+	d.Set("arn", resp.Arn)
+	d.Set("type", resp.Type)
+	d.Set("name", resp.Name)
+	d.Set("input_class", resp.InputClass)
 
-	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MedialiveKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
