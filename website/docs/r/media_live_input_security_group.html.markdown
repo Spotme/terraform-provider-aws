@@ -12,26 +12,8 @@ Provides an AWS Elemental MediaLive Input Security Group.
 
 ## Example Usage
 
-```hcl
-resource "aws_medialive_input_security_group" "test" {
-  whitelist_rule {
-    cidr = "10.0.0.0/8"
-  }
-}
-```
 
 ## Argument Reference
-
-The following arguments are supported:
-
-* `whitelist_rule` - (Optional) A detail whitelist rule. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
-
-### Nested Fields
-
-#### `whitelist_rule`
-
-* `cidr` - (Required) The IPv4 CIDR to whitelist.
 
 ## Attributes Reference
 
