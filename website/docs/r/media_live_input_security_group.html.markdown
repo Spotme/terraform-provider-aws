@@ -8,7 +8,6 @@ description: |-
 
 # Resource: aws_medialive_input_security_group
 
-Provides an AWS Elemental MediaLive Input Security Group.
 
 ## Example Usage
 
@@ -17,10 +16,6 @@ Provides an AWS Elemental MediaLive Input Security Group.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
-
-* `id` - The Id of the input security group
-* `arn` - The Arn of the input security group
 
 ## Import
 
