@@ -1,6 +1,9 @@
 ---
-subcategory: "MediaLive"
+subcategory: "MediaPackage"
 layout: "aws"
+page_title: "AWS: aws_medialive_input"
+description: |-
+  Provides an AWS Elemental Input.
 ---
 
 # Resource: aws_media_live_input

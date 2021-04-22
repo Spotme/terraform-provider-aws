@@ -1,9 +1,9 @@
 ---
-subcategory: "MediaLive"
+subcategory: "MediaPackage"
 layout: "aws"
 page_title: "AWS: aws_medialive_input_security_group"
 description: |-
-  Provides an AWS Elemental MediaLive Input Security Group.
+  Provides an AWS Elemental Input Security Group.
 ---
 
 # Resource: aws_medialive_input_security_group
