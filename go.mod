@@ -3,7 +3,8 @@ module github.com/terraform-providers/terraform-provider-aws
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.38.19
+	github.com/apparentlymart/go-cidr v1.1.0 // indirect
+	github.com/aws/aws-sdk-go v1.41.6
 	github.com/beevik/etree v1.1.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/google/uuid v1.2.0
@@ -12,7 +13,8 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.3.0
-	github.com/hashicorp/terraform-plugin-sdk v1.17.0
+	github.com/hashicorp/hcl/v2 v2.8.2 // indirect
+	github.com/hashicorp/terraform-exec v0.13.1 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.5.0
 	github.com/jen20/awspolicyequivalence v1.1.0
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
@@ -21,5 +23,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/pquerna/otp v1.3.0
+	golang.org/x/tools v0.0.0-20201028111035-eafbe7b904eb // indirect
+	google.golang.org/api v0.34.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
