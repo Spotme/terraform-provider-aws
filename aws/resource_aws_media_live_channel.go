@@ -1248,6 +1248,56 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 										Optional: true,
 										Default:  "DISABLED",
 									},
+
+									"smpte2038_data_preference": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "IGNORE",
+									},
+
+									"caption_selectors": {
+										Type:     schema.TypeList,
+										Required: false,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"selector_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"embedded_source_settings": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"source608_channel_number": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+
+																		"source608_track_number": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"convert608_to708": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"scte20_detection": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},

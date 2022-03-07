@@ -261,6 +261,21 @@ func expandStandardHlsSettings(s *schema.Set) *medialive.StandardHlsSettings {
 	}
 }
 
+func expandEmbeddedSourceSettings(s *schema.Set) *medialive.EmbeddedSourceSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.EmbeddedSourceSettings{
+			Convert608To708:        aws.String(settings["convert608_to708"].(string)),
+			Scte20Detection:        aws.String(settings["scte20_detection"].(string)),
+			Source608ChannelNumber: aws.Int64(int64(settings["source608_channel_number"].(int))),
+			Source608TrackNumber:   aws.Int64(int64(settings["source608_track_number"].(int))),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: EmbeddedSourceSettings can not be found")
+		return &medialive.EmbeddedSourceSettings{}
+	}
+}
+
 func expandAudioOnlyHlsSettings(s *schema.Set) *medialive.AudioOnlyHlsSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
@@ -382,11 +397,12 @@ func expandInputAttachmentSettings(s *schema.Set) *medialive.InputSettings {
 	if s.Len() > 0 {
 		rawInputSettings := s.List()[0].(map[string]interface{})
 		return &medialive.InputSettings{
-			DeblockFilter:     aws.String(rawInputSettings["deblock_filter"].(string)),
-			DenoiseFilter:     aws.String(rawInputSettings["denoise_filter"].(string)),
-			FilterStrength:    aws.Int64(int64(rawInputSettings["filter_strength"].(int))),
-			InputFilter:       aws.String(rawInputSettings["input_filter"].(string)),
-			SourceEndBehavior: aws.String(rawInputSettings["source_end_behavior"].(string)),
+			DeblockFilter:           aws.String(rawInputSettings["deblock_filter"].(string)),
+			DenoiseFilter:           aws.String(rawInputSettings["denoise_filter"].(string)),
+			FilterStrength:          aws.Int64(int64(rawInputSettings["filter_strength"].(int))),
+			InputFilter:             aws.String(rawInputSettings["input_filter"].(string)),
+			SourceEndBehavior:       aws.String(rawInputSettings["source_end_behavior"].(string)),
+			Smpte2038DataPreference: aws.String(rawInputSettings["smpte2038_data_preference"].(string)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: InputSettings can not be found")
