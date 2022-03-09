@@ -266,7 +266,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 						"caption_descriptions": {
 							Type:     schema.TypeList,
-							Required: false,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -1300,7 +1300,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 									"caption_selectors": {
 										Type:     schema.TypeList,
-										Required: false,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"name": {
@@ -1325,7 +1325,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																	Schema: map[string]*schema.Schema{
 																		"source608_channel_number": {
 																			Type:     schema.TypeInt,
-																			Required: true,
+																			Optional: true,
 																		},
 
 																		"source608_track_number": {
