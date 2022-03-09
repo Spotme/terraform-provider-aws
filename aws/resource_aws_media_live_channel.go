@@ -1308,6 +1308,11 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 													Required: true,
 												},
 
+												"language_code": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
 												"selector_settings": {
 													Type:     schema.TypeSet,
 													Optional: true,
