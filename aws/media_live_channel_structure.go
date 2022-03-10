@@ -89,10 +89,11 @@ func expandEncoderSettings(s *schema.Set) *medialive.EncoderSettings {
 	if s.Len() > 0 {
 		rawEncoderSettings := s.List()[0].(map[string]interface{})
 		return &medialive.EncoderSettings{
-			AudioDescriptions: expandAudioDescriptions(rawEncoderSettings["audio_descriptions"].([]interface{})),
-			OutputGroups:      expandOutputGroups(rawEncoderSettings["output_groups"].([]interface{})),
-			TimecodeConfig:    expandTimecodeConfigs(rawEncoderSettings["timecode_config"].(*schema.Set)),
-			VideoDescriptions: expandVideoDescriptions(rawEncoderSettings["video_descriptions"].([]interface{})),
+			AudioDescriptions:   expandAudioDescriptions(rawEncoderSettings["audio_descriptions"].([]interface{})),
+			CaptionDescriptions: expandCaptionDescriptions(rawEncoderSettings["caption_descriptions"].([]interface{})),
+			OutputGroups:        expandOutputGroups(rawEncoderSettings["output_groups"].([]interface{})),
+			TimecodeConfig:      expandTimecodeConfigs(rawEncoderSettings["timecode_config"].(*schema.Set)),
+			VideoDescriptions:   expandVideoDescriptions(rawEncoderSettings["video_descriptions"].([]interface{})),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: Encoder settings required")
@@ -200,10 +201,11 @@ func expandOutputs(outputs []interface{}) []*medialive.Output {
 		}
 
 		result = append(result, &medialive.Output{
-			OutputName:            aws.String(r["output_name"].(string)),
-			AudioDescriptionNames: expandStringList(r["audio_description_names"].([]interface{})),
-			OutputSettings:        expandOutputSettings(r["output_settings"].(*schema.Set)),
-			VideoDescriptionName:  videoDescNameAws,
+			OutputName:              aws.String(r["output_name"].(string)),
+			AudioDescriptionNames:   expandStringList(r["audio_description_names"].([]interface{})),
+			CaptionDescriptionNames: expandStringList(r["caption_description_names"].([]interface{})),
+			OutputSettings:          expandOutputSettings(r["output_settings"].(*schema.Set)),
+			VideoDescriptionName:    videoDescNameAws,
 		})
 	}
 	return result
@@ -255,6 +257,87 @@ func expandStandardHlsSettings(s *schema.Set) *medialive.StandardHlsSettings {
 		return &medialive.StandardHlsSettings{
 			AudioRenditionSets: aws.String(settings["audio_rendition_sets"].(string)),
 			M3u8Settings:       expandM3u8settings(settings["m3u8_settings"].(*schema.Set)),
+		}
+	} else {
+		return nil
+	}
+}
+
+// MARK: Caption Selectors
+
+func expandCaptionSelectors(captionSelectors []interface{}) []*medialive.CaptionSelector {
+	var result []*medialive.CaptionSelector
+
+	for _, descs := range captionSelectors {
+		r := descs.(map[string]interface{})
+
+		result = append(result, &medialive.CaptionSelector{
+			Name:             aws.String(r["name"].(string)),
+			SelectorSettings: expandCaptionSelectorSettings(r["selector_settings"].(*schema.Set)),
+		})
+	}
+	return result
+}
+
+func expandCaptionSelectorSettings(s *schema.Set) *medialive.CaptionSelectorSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.CaptionSelectorSettings{
+			EmbeddedSourceSettings: expandEmbeddedSourceSettings(settings["embedded_source_settings"].(*schema.Set)),
+		}
+	} else {
+		return nil
+	}
+}
+
+func expandEmbeddedSourceSettings(s *schema.Set) *medialive.EmbeddedSourceSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.EmbeddedSourceSettings{
+			Convert608To708:        aws.String(settings["convert608_to708"].(string)),
+			Scte20Detection:        aws.String(settings["scte20_detection"].(string)),
+			Source608ChannelNumber: aws.Int64(int64(settings["source608_channel_number"].(int))),
+			Source608TrackNumber:   aws.Int64(int64(settings["source608_track_number"].(int))),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: EmbeddedSourceSettings can not be found")
+		return &medialive.EmbeddedSourceSettings{}
+	}
+}
+
+// MARK: Caption Descriptions
+
+func expandCaptionDescriptions(captionDescriptions []interface{}) []*medialive.CaptionDescription {
+	var result []*medialive.CaptionDescription
+
+	for _, descs := range captionDescriptions {
+		r := descs.(map[string]interface{})
+
+		result = append(result, &medialive.CaptionDescription{
+			CaptionSelectorName: aws.String(r["caption_selector_name"].(string)),
+			Name:                aws.String(r["name"].(string)),
+			DestinationSettings: expandCaptionDestinationSettings(r["destination_settings"].(*schema.Set)),
+		})
+	}
+	return result
+}
+
+func expandCaptionDestinationSettings(s *schema.Set) *medialive.CaptionDestinationSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.CaptionDestinationSettings{
+			WebvttDestinationSettings: expandWebvttDestinationSettings(settings["webvtt_destination_settings"].(*schema.Set)),
+		}
+	} else {
+		return nil
+	}
+}
+
+func expandWebvttDestinationSettings(s *schema.Set) *medialive.WebvttDestinationSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.WebvttDestinationSettings{
+			StyleControl: aws.String(settings["style_control"].(string)),
 		}
 	} else {
 		return nil
@@ -382,11 +465,13 @@ func expandInputAttachmentSettings(s *schema.Set) *medialive.InputSettings {
 	if s.Len() > 0 {
 		rawInputSettings := s.List()[0].(map[string]interface{})
 		return &medialive.InputSettings{
-			DeblockFilter:     aws.String(rawInputSettings["deblock_filter"].(string)),
-			DenoiseFilter:     aws.String(rawInputSettings["denoise_filter"].(string)),
-			FilterStrength:    aws.Int64(int64(rawInputSettings["filter_strength"].(int))),
-			InputFilter:       aws.String(rawInputSettings["input_filter"].(string)),
-			SourceEndBehavior: aws.String(rawInputSettings["source_end_behavior"].(string)),
+			DeblockFilter:           aws.String(rawInputSettings["deblock_filter"].(string)),
+			DenoiseFilter:           aws.String(rawInputSettings["denoise_filter"].(string)),
+			FilterStrength:          aws.Int64(int64(rawInputSettings["filter_strength"].(int))),
+			InputFilter:             aws.String(rawInputSettings["input_filter"].(string)),
+			SourceEndBehavior:       aws.String(rawInputSettings["source_end_behavior"].(string)),
+			Smpte2038DataPreference: aws.String(rawInputSettings["smpte2038_data_preference"].(string)),
+			CaptionSelectors:        expandCaptionSelectors(rawInputSettings["caption_selectors"].([]interface{})),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: InputSettings can not be found")

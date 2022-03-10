@@ -264,6 +264,49 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 							},
 						},
 
+						"caption_descriptions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"caption_selector_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"destination_settings": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"webvtt_destination_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															// Controls whether the color and position of the source captions is passed
+															// through to the WebVTT output captions. PASSTHROUGH - Valid only if the source
+															// captions are EMBEDDED or TELETEXT. NO_STYLE_DATA - Don't pass through the
+															// style. The output captions will not contain any font styling information.
+															"style_control": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
 						"avail_blanking": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -1247,6 +1290,66 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "DISABLED",
+									},
+
+									"smpte2038_data_preference": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "IGNORE",
+									},
+
+									"caption_selectors": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"language_code": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+
+												"selector_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"embedded_source_settings": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"source608_channel_number": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+
+																		"source608_track_number": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+
+																		"convert608_to708": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"scte20_detection": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 								},
 							},
