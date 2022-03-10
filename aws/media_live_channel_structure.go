@@ -530,7 +530,7 @@ func expandVideoCodecSettings(s *schema.Set) *medialive.VideoCodecSettings {
 func expandH264Settings(s *schema.Set) *medialive.H264Settings {
 	if s.Len() > 0 {
 		rawSettings := s.List()[0].(map[string]interface{})
-		return &medialive.H264Settings{
+		h264Settings := &medialive.H264Settings{
 			AdaptiveQuantization: aws.String(rawSettings["adaptive_quantization"].(string)),
 			AfdSignaling:         aws.String(rawSettings["afd_signaling"].(string)),
 			Bitrate:              aws.Int64(int64(rawSettings["bitrate"].(int))),
@@ -540,9 +540,6 @@ func expandH264Settings(s *schema.Set) *medialive.H264Settings {
 			EntropyEncoding:      aws.String(rawSettings["entropy_encoding"].(string)),
 			FlickerAq:            aws.String(rawSettings["flicker_aq"].(string)),
 			ForceFieldPictures:   aws.String(rawSettings["force_field_pictures"].(string)),
-			FramerateControl:     aws.String(rawSettings["framerate_control"].(string)),
-			FramerateDenominator: aws.Int64(int64(rawSettings["framerate_denominator"].(int))),
-			FramerateNumerator:   aws.Int64(int64(rawSettings["framerate_numerator"].(int))),
 			GopBReference:        aws.String(rawSettings["gop_b_reference"].(string)),
 			GopClosedCadence:     aws.Int64(int64(rawSettings["gop_closed_cadence"].(int))),
 			GopNumBFrames:        aws.Int64(int64(rawSettings["gop_num_b_frames"].(int))),
@@ -561,6 +558,14 @@ func expandH264Settings(s *schema.Set) *medialive.H264Settings {
 			TemporalAq:           aws.String(rawSettings["temporal_aq"].(string)),
 			TimecodeInsertion:    aws.String(rawSettings["timecode_insertion"].(string)),
 		}
+		framerateControl := rawSettings["framerate_control"].(string)
+		h264Settings.FramerateControl = aws.String(framerateControl)
+
+		if framerateControl == "SPECIFIED" {
+			h264Settings.FramerateDenominator = aws.Int64(int64(rawSettings["framerate_denominator"].(int)))
+			h264Settings.FramerateNumerator = aws.Int64(int64(rawSettings["framerate_numerator"].(int)))
+		}
+		return h264Settings
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: H264Settings can not be found")
 		return &medialive.H264Settings{}
