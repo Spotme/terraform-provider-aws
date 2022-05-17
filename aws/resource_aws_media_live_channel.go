@@ -281,7 +281,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 									"destination_settings": {
 										Type:     schema.TypeSet,
-										Required: true,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"webvtt_destination_settings": {
@@ -296,6 +296,18 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 															"style_control": {
 																Type:     schema.TypeString,
 																Required: true,
+															},
+														},
+													},
+												},
+												"embedded_destination_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"reserved": {
+																Type:     schema.TypeString,
+																Optional: true,
 															},
 														},
 													},
