@@ -326,7 +326,8 @@ func expandCaptionDestinationSettings(s *schema.Set) *medialive.CaptionDestinati
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
 		return &medialive.CaptionDestinationSettings{
-			WebvttDestinationSettings: expandWebvttDestinationSettings(settings["webvtt_destination_settings"].(*schema.Set)),
+			WebvttDestinationSettings:   expandWebvttDestinationSettings(settings["webvtt_destination_settings"].(*schema.Set)),
+			EmbeddedDestinationSettings: expandEmbeddedDestinationSettings(settings["embedded_destination_settings"].(*schema.Set)),
 		}
 	} else {
 		return nil
@@ -339,6 +340,14 @@ func expandWebvttDestinationSettings(s *schema.Set) *medialive.WebvttDestination
 		return &medialive.WebvttDestinationSettings{
 			StyleControl: aws.String(settings["style_control"].(string)),
 		}
+	} else {
+		return nil
+	}
+}
+
+func expandEmbeddedDestinationSettings(s *schema.Set) *medialive.EmbeddedDestinationSettings {
+	if s.Len() > 0 {
+		return &medialive.EmbeddedDestinationSettings{}
 	} else {
 		return nil
 	}
