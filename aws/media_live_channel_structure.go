@@ -394,6 +394,7 @@ func expandHlsGroupSettings(s *schema.Set) *medialive.HlsGroupSettings {
 		settings := s.List()[0].(map[string]interface{})
 		return &medialive.HlsGroupSettings{
 			CaptionLanguageSetting:     aws.String(settings["caption_language_setting"].(string)),
+			CaptionLanguageMappings:    expandCaptionLanguageMapping(settings["caption_language_mapping"].([]interface{})),
 			CodecSpecification:         aws.String(settings["codec_specification"].(string)),
 			ClientCache:                aws.String(settings["client_cache"].(string)),
 			HlsCdnSettings:             expandHlsCdnSettings(settings["hls_cdn_settings"].(*schema.Set)),
@@ -426,6 +427,23 @@ func expandHlsGroupSettings(s *schema.Set) *medialive.HlsGroupSettings {
 		log.Printf("[ERROR] MediaLive Channel: HlsGroupSettings can not be found")
 		return &medialive.HlsGroupSettings{}
 	}
+}
+
+func expandCaptionLanguageMapping(captionMappings []interface{}) []*medialive.CaptionLanguageMapping {
+	var result []*medialive.CaptionLanguageMapping
+	if len(captionMappings) == 0 {
+		return nil
+	}
+
+	for _, v := range captionMappings {
+		settings := v.(map[string]interface{})
+		result = append(result, &medialive.CaptionLanguageMapping{
+			CaptionChannel:      aws.Int64(int64(settings["caption_channel"].(int))),
+			LanguageCode:        aws.String(settings["language_code"].(string)),
+			LanguageDescription: aws.String(settings["language_description"].(string)),
+		})
+	}
+	return result
 }
 
 func expandHlsCdnSettings(s *schema.Set) *medialive.HlsCdnSettings {
