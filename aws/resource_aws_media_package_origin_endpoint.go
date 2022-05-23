@@ -47,11 +47,13 @@ func resourceAwsMediaPackageOriginEndpoint() *schema.Resource {
 			"channel_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 
 			"description": {
