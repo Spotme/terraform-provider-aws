@@ -568,6 +568,30 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																Optional: true,
 															},
 
+															"caption_language_mapping": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 4,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"caption_channel": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+
+																		"language_code": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+
+																		"language_description": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
 															"hls_cdn_settings": {
 																Type:     schema.TypeSet,
 																Required: true,
