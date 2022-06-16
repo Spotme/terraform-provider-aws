@@ -196,6 +196,10 @@ func resourceAwsMediaLiveInputRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting destinations: %s", err)
 	}
 
+	if err := d.Set("sources", flattenInputSources(resp.Sources)); err != nil {
+		return fmt.Errorf("error setting input sources: %s", err)
+	}
+
 	d.Set("arn", resp.Arn)
 	d.Set("type", resp.Type)
 	d.Set("name", resp.Name)
@@ -373,7 +377,7 @@ func expandInputSources(sources []interface{}) []*medialive.InputSourceRequest {
 	return result
 }
 
-func flattenInputSources(sources []*medialive.InputSourceRequest) []map[string]interface{} {
+func flattenInputSources(sources []*medialive.InputSource) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(sources))
 	for _, source := range sources {
 		r := map[string]interface{}{
