@@ -31,7 +31,7 @@ func resourceAwsMediaLiveInput() *schema.Resource {
 
 			"destinations": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip": {
@@ -76,14 +76,34 @@ func resourceAwsMediaLiveInput() *schema.Resource {
 
 			"input_security_groups": {
 				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"input_class": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+
+			"sources": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"url": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"password_param": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"username": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 
 			"tags": tagsSchema(),
@@ -102,6 +122,12 @@ func resourceAwsMediaLiveInputCreate(d *schema.ResourceData, meta interface{}) e
 
 	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
 		input.Destinations = expandInputDestinations(
+			v.([]interface{}),
+		)
+	}
+
+	if v, ok := d.GetOk("sources"); ok && len(v.([]interface{})) > 0 {
+		input.Sources = expandInputSources(
 			v.([]interface{}),
 		)
 	}
@@ -199,6 +225,12 @@ func resourceAwsMediaLiveInputUpdate(d *schema.ResourceData, meta interface{}) e
 				v.([]interface{}),
 			)
 		}
+	}
+
+	if v, ok := d.GetOk("sources"); ok && len(v.([]interface{})) > 0 {
+		input.Sources = expandInputSources(
+			v.([]interface{}),
+		)
 	}
 
 	if d.HasChange("input_security_groups") {
@@ -319,6 +351,37 @@ func expandInputDestinations(destinations []interface{}) []*medialive.InputDesti
 		result = append(result, &medialive.InputDestinationRequest{
 			StreamName: aws.String(r["stream_name"].(string)),
 		})
+	}
+	return result
+}
+
+func expandInputSources(sources []interface{}) []*medialive.InputSourceRequest {
+	var result []*medialive.InputSourceRequest
+	if len(sources) == 0 {
+		return nil
+	}
+
+	for _, source := range sources {
+		r := source.(map[string]interface{})
+
+		result = append(result, &medialive.InputSourceRequest{
+			Url:           aws.String(r["url"].(string)),
+			PasswordParam: aws.String(r["password_param"].(string)),
+			Username:      aws.String(r["username"].(string)),
+		})
+	}
+	return result
+}
+
+func flattenInputSources(sources []*medialive.InputSourceRequest) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(sources))
+	for _, source := range sources {
+		r := map[string]interface{}{
+			"url":            aws.StringValue(source.Url),
+			"password_param": aws.StringValue(source.PasswordParam),
+			"username":       aws.StringValue(source.Username),
+		}
+		result = append(result, r)
 	}
 	return result
 }
