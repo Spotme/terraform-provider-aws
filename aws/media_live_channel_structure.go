@@ -94,6 +94,7 @@ func expandEncoderSettings(s *schema.Set) *medialive.EncoderSettings {
 			OutputGroups:        expandOutputGroups(rawEncoderSettings["output_groups"].([]interface{})),
 			TimecodeConfig:      expandTimecodeConfigs(rawEncoderSettings["timecode_config"].(*schema.Set)),
 			VideoDescriptions:   expandVideoDescriptions(rawEncoderSettings["video_descriptions"].([]interface{})),
+			FeatureActivations:  expandFeatureActivations(rawEncoderSettings["feature_activations"].(*schema.Set)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: Encoder settings required")
@@ -120,6 +121,18 @@ func expandAudioDescriptions(audioDescriptions []interface{}) []*medialive.Audio
 		})
 	}
 	return result
+}
+
+func expandFeatureActivations(s *schema.Set) *medialive.FeatureActivations {
+	if s.Len() > 0 {
+		rawConfig := s.List()[0].(map[string]interface{})
+		return &medialive.FeatureActivations{
+			InputPrepareScheduleActions: aws.String(rawConfig["input_prepare_schedule_actions"].(string)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: FeatureActivations config is malformed")
+		return &medialive.FeatureActivations{}
+	}
 }
 
 func expandAudioCodecSettings(s *schema.Set) *medialive.AudioCodecSettings {
