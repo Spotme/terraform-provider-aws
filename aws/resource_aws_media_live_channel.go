@@ -8,6 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/medialive"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -259,6 +261,20 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 									"stream_name": {
 										Type:     schema.TypeString,
 										Optional: true,
+									},
+								},
+							},
+						},
+
+						"feature_activations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"input_prepare_schedule_actions": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validateChannelFeatureActivationsFields,
 									},
 								},
 							},
@@ -1672,4 +1688,22 @@ func waitForMediaLiveChannelDeletion(conn *medialive.MediaLive, channelId string
 	}
 
 	return err
+}
+
+func validateChannelFeatureActivationsFields(i interface{}, path cty.Path) diag.Diagnostics {
+	value, ok := i.(string)
+	if !ok {
+		return diag.Errorf("expected type to be string")
+	}
+
+	var diags diag.Diagnostics
+	if value != "ENABLED" && value != "DISABLED" {
+		diag := diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "input_prepare_schedule_actions: wrong value",
+			Detail:   fmt.Sprintf("input_prepare_schedule_actions value can be only ENABLED or DISABLED, got: %s", value),
+		}
+		diags = append(diags, diag)
+	}
+	return diags
 }
