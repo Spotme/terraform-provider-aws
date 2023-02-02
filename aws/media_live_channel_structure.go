@@ -189,7 +189,8 @@ func expandOutputGroupSettings(s *schema.Set) *medialive.OutputGroupSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
 		return &medialive.OutputGroupSettings{
-			HlsGroupSettings: expandHlsGroupSettings(settings["hls_group_settings"].(*schema.Set)),
+			HlsGroupSettings:  expandHlsGroupSettings(settings["hls_group_settings"].(*schema.Set)),
+			RtmpGroupSettings: expandRtmpGroupSettings(settings["rtmp_group_settings"].(*schema.Set)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: OutputGroupSettings can not be found")
@@ -228,7 +229,8 @@ func expandOutputSettings(s *schema.Set) *medialive.OutputSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
 		return &medialive.OutputSettings{
-			HlsOutputSettings: expandHlsOutputSettings(settings["hls_output_settings"].(*schema.Set)),
+			HlsOutputSettings:  expandHlsOutputSettings(settings["hls_output_settings"].(*schema.Set)),
+			RtmpOutputSettings: expandRtmpOutputSettings(settings["rtmp_output_settings"].(*schema.Set)),
 		}
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: OutputSettings can not be found")
@@ -609,5 +611,48 @@ func expandH264Settings(s *schema.Set) *medialive.H264Settings {
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: H264Settings can not be found")
 		return &medialive.H264Settings{}
+	}
+}
+
+func expandRtmpGroupSettings(s *schema.Set) *medialive.RtmpGroupSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.RtmpGroupSettings{
+			AuthenticationScheme: aws.String(settings["authentication_scheme"].(string)),
+			CacheFullBehavior:    aws.String(settings["cache_full_behavior"].(string)),
+			CacheLength:          aws.Int64(int64(settings["cache_length"].(int))),
+			CaptionData:          aws.String(settings["caption_data"].(string)),
+			InputLossAction:      aws.String(settings["input_loss_action"].(string)),
+			RestartDelay:         aws.Int64(int64(settings["restart_delay"].(int))),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: RtmpGroupSettings can not be found")
+		return &medialive.RtmpGroupSettings{}
+	}
+}
+
+func expandRtmpOutputSettings(s *schema.Set) *medialive.RtmpOutputSettings {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.RtmpOutputSettings{
+			CertificateMode:         aws.String(settings["certificate_mode"].(string)),
+			ConnectionRetryInterval: aws.Int64(int64(settings["connection_retry_interval"].(int))),
+			NumRetries:              aws.Int64(int64(settings["num_retries"].(int))),
+			Destination:             expandRtmpOutputDestination(settings["destination"].(*schema.Set)),
+		}
+	} else {
+		log.Printf("[ERROR] MediaLive Channel: RtmpOutputSettings can not be found")
+		return &medialive.RtmpOutputSettings{}
+	}
+}
+
+func expandRtmpOutputDestination(s *schema.Set) *medialive.OutputLocationRef {
+	if s.Len() > 0 {
+		settings := s.List()[0].(map[string]interface{})
+		return &medialive.OutputLocationRef{
+			DestinationRefId: aws.String(settings["destination_ref_id"].(string)),
+		}
+	} else {
+		return nil
 	}
 }
