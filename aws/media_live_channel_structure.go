@@ -188,10 +188,24 @@ func expandOutputGroups(outputGroups []interface{}) []*medialive.OutputGroup {
 func expandOutputGroupSettings(s *schema.Set) *medialive.OutputGroupSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
-		return &medialive.OutputGroupSettings{
-			HlsGroupSettings:  expandHlsGroupSettings(settings["hls_group_settings"].(*schema.Set)),
-			RtmpGroupSettings: expandRtmpGroupSettings(settings["rtmp_group_settings"].(*schema.Set)),
+
+		// we can now have either hls, rmtp group, or both settings specified,
+		// to ensure a working api we need to ensure not to attach an empty
+		// hls or rtmp group struct
+		outputGroupSettings := medialive.OutputGroupSettings{}
+		hlsGroupSettings := expandHlsGroupSettings(settings["hls_group_settings"].(*schema.Set))
+		rtmpGroupSettings := expandRtmpGroupSettings(settings["rtmp_group_settings"].(*schema.Set))
+
+		// hls and rtmp group settings dont implement comparison operators
+		// so we are checking for hardcoded fields in our module to not be NIL
+		if hlsGroupSettings.Mode != nil {
+			outputGroupSettings.HlsGroupSettings = hlsGroupSettings
 		}
+		if rtmpGroupSettings.AuthenticationScheme != nil {
+			outputGroupSettings.RtmpGroupSettings = rtmpGroupSettings
+		}
+
+		return &outputGroupSettings
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: OutputGroupSettings can not be found")
 		return &medialive.OutputGroupSettings{}
@@ -228,10 +242,22 @@ func expandOutputs(outputs []interface{}) []*medialive.Output {
 func expandOutputSettings(s *schema.Set) *medialive.OutputSettings {
 	if s.Len() > 0 {
 		settings := s.List()[0].(map[string]interface{})
-		return &medialive.OutputSettings{
-			HlsOutputSettings:  expandHlsOutputSettings(settings["hls_output_settings"].(*schema.Set)),
-			RtmpOutputSettings: expandRtmpOutputSettings(settings["rtmp_output_settings"].(*schema.Set)),
+
+		// we can now have either hls or rmtp outputs, or both settings specified,
+		// to ensure a working api we need to ensure not to attach an empty
+		// hls or rtmp group struct
+		outputSettings := medialive.OutputSettings{}
+		hlsOutputSettings := expandHlsOutputSettings(settings["hls_output_settings"].(*schema.Set))
+		rtmpOutputSettings := expandRtmpOutputSettings(settings["rtmp_output_settings"].(*schema.Set))
+
+		if (*hlsOutputSettings != medialive.HlsOutputSettings{}) {
+			outputSettings.HlsOutputSettings = hlsOutputSettings
 		}
+		if (*rtmpOutputSettings != medialive.RtmpOutputSettings{}) {
+			outputSettings.RtmpOutputSettings = rtmpOutputSettings
+		}
+
+		return &outputSettings
 	} else {
 		log.Printf("[ERROR] MediaLive Channel: OutputSettings can not be found")
 		return &medialive.OutputSettings{}
