@@ -65,7 +65,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"password_param": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 
 									"stream_name": {
@@ -80,7 +80,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 									"username": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
