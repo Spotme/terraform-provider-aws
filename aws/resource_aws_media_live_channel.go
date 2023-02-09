@@ -65,7 +65,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"password_param": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 
 									"stream_name": {
@@ -80,7 +80,7 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 
 									"username": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
@@ -779,6 +779,43 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 														},
 													},
 												},
+												"rtmp_group_settings": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"authentication_scheme": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"cache_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"restart_delay": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"cache_full_behavior": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"caption_data": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"input_loss_action": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															// excluding ad_markers as they aren't
+															// defined for the hls group settings either
+															// "ad_markers": {
+															//
+															// },
+														},
+													},
+												},
 											},
 										},
 									},
@@ -960,6 +997,38 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 																		"segment_modifier": {
 																			Type:     schema.TypeString,
 																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"rtmp_output_settings": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"connection_retry_interval": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"num_retries": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"certificate_mode": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"destination": {
+																			Type:     schema.TypeSet,
+																			Optional: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"destination_ref_id": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																					},
+																				},
+																			},
 																		},
 																	},
 																},

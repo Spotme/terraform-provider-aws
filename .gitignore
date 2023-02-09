@@ -30,7 +30,7 @@ website/node_modules
 log.txt
 markdown-link-check*.txt
 changelog.tmp
-terraform-provider-aws
+terraform-provider-aws*
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
 vendor/
 # Test exclusions
