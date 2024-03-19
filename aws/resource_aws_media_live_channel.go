@@ -1517,9 +1517,8 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"maintenance_day": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.MaintenanceDay](),
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"maintenance_start_time": {
 							Type:     schema.TypeString,
@@ -1583,6 +1582,12 @@ func resourceAwsMediaLiveChannelCreate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("encoder_settings"); ok {
 		input.EncoderSettings = expandEncoderSettings(
 			v.(*schema.Set),
+		)
+	}
+
+	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
+		input.Maintenance = expandChannelMaintenanceCreate(
+			v.([]interface{}),
 		)
 	}
 
@@ -1682,6 +1687,12 @@ func resourceAwsMediaLiveChannelUpdate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("encoder_settings"); ok {
 		input.EncoderSettings = expandEncoderSettings(
 			v.(*schema.Set),
+		)
+	}
+
+	if v, ok := d.GetOk("maintenance"); ok {
+		input.Maintenance = expandChannelMaintenanceUpdate(
+			v.([]interface{}),
 		)
 	}
 
