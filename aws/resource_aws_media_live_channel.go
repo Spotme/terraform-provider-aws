@@ -1509,6 +1509,26 @@ func resourceAwsMediaLiveChannel() *schema.Resource {
 				Default:  "DISABLED",
 			},
 
+			"maintenance": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maintenance_day": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.MaintenanceDay](),
+						},
+						"maintenance_start_time": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
