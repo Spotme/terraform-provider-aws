@@ -11,16 +11,17 @@ import (
 )
 
 // Returns true if the error matches all these conditions:
-//  * err is of type awserr.Error
-//  * Error.Code() matches code
-//  * Error.Message() contains message
+//   - err is of type awserr.Error
+//   - Error.Code() matches code
+//   - Error.Message() contains message
 func isAWSErr(err error, code string, message string) bool {
 	return tfawserr.ErrMessageContains(err, code, message)
 }
 
 // Returns true if the error matches all these conditions:
-//  * err is of type awserr.RequestFailure
-//  * RequestFailure.StatusCode() matches status code
+//   - err is of type awserr.RequestFailure
+//   - RequestFailure.StatusCode() matches status code
+//
 // It is always preferable to use isAWSErr() except in older APIs (e.g. S3)
 // that sometimes only respond with status codes.
 func isAWSErrRequestFailureStatusCode(err error, statusCode int) bool {
