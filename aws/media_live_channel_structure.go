@@ -682,3 +682,55 @@ func expandRtmpOutputDestination(s *schema.Set) *medialive.OutputLocationRef {
 		return nil
 	}
 }
+
+func expandChannelMaintenanceCreate(tfList []interface{}) *medialive.MaintenanceCreateSettings {
+	if tfList == nil {
+		return nil
+	}
+	m := tfList[0].(map[string]interface{})
+
+	settings := &medialive.MaintenanceCreateSettings{}
+	if v, ok := m["maintenance_day"].(string); ok && v != "" {
+		settings.MaintenanceDay = aws.String(v)
+	}
+	if v, ok := m["maintenance_start_time"].(string); ok && v != "" {
+		settings.MaintenanceStartTime = aws.String(v)
+	}
+
+	return settings
+}
+
+func expandChannelMaintenanceUpdate(tfList []interface{}) *medialive.MaintenanceUpdateSettings {
+	if tfList == nil {
+		return nil
+	}
+	m := tfList[0].(map[string]interface{})
+
+	settings := &medialive.MaintenanceUpdateSettings{}
+	if v, ok := m["maintenance_day"].(string); ok && v != "" {
+		settings.MaintenanceDay = aws.String(v)
+	}
+	if v, ok := m["maintenance_start_time"].(string); ok && v != "" {
+		settings.MaintenanceStartTime = aws.String(v)
+	}
+	// NOTE: This field is only available in the update struct. To allow users to set a scheduled
+	// date on update, it may be worth adding to the base schema.
+	// if v, ok := m["maintenance_scheduled_date"].(string); ok && v != "" {
+	// 	settings.MaintenanceScheduledDate = aws.String(v)
+	// }
+
+	return settings
+}
+
+func flattenChannelMaintenance(apiObject *medialive.MaintenanceStatus) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"maintenance_day":        apiObject.MaintenanceDay,
+		"maintenance_start_time": apiObject.MaintenanceStartTime,
+	}
+
+	return []interface{}{m}
+}
